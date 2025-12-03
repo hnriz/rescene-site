@@ -28,7 +28,24 @@ const upload = multer({
 
 // --- Middlewares ---
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3001',
+      'http://localhost:3000',
+      'https://rescene-site.vercel.app',
+      'https://rescene-site-eq9lwbmlk-henris-projects-2a7fe5d7.vercel.app',
+      /\.vercel\.app$/  // Allow any Vercel deployment
+    ];
+    
+    if (!origin || allowedOrigins.some(allowed => 
+      allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
+    )) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
