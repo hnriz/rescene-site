@@ -3,31 +3,32 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en'); // 'en' ou 'pt-br'
+  const [language, setLanguageState] = useState('en'); // 'en' ou 'pt-br'
   const [loading, setLoading] = useState(true);
 
   // Carregar idioma salvo ou do navegador
   useEffect(() => {
     const savedLanguage = localStorage.getItem('userLanguage');
     if (savedLanguage) {
-      setLanguage(savedLanguage);
+      setLanguageState(savedLanguage);
     } else {
       // Detectar idioma do navegador
       const browserLang = navigator.language.toLowerCase();
       const detectedLang = browserLang.startsWith('pt') ? 'pt-br' : 'en';
-      setLanguage(detectedLang);
+      setLanguageState(detectedLang);
       localStorage.setItem('userLanguage', detectedLang);
     }
     setLoading(false);
   }, []);
 
-  const changeLanguage = (newLanguage) => {
-    setLanguage(newLanguage);
+  const setLanguage = (newLanguage) => {
+    console.log('🌐 Mudando idioma para:', newLanguage);
+    setLanguageState(newLanguage);
     localStorage.setItem('userLanguage', newLanguage);
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, loading }}>
+    <LanguageContext.Provider value={{ language, setLanguage, loading }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -309,6 +309,22 @@ function Settings() {
         }
     };
 
+    const handleLanguageChange = (newLang) => {
+        console.log('🌐 Mudando idioma em Settings.js para:', newLang);
+        setSelectedLanguage(newLang);
+        setLanguage(newLang);
+        setLanguageDropdownOpen(false);
+        
+        // Delay para permitir que o contexto atualize antes de navegar
+        setTimeout(() => {
+            if (newLang === 'pt-br') {
+                navigate('/configuracoes');
+            } else {
+                navigate('/settings');
+            }
+        }, 100);
+    };
+
     return (
         <>
             <BackButton />
@@ -435,26 +451,14 @@ function Settings() {
                                             <div class="interface-language-menu">
                                                 <button 
                                                     class={`interface-language-option ${selectedLanguage === 'pt-br' ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        setSelectedLanguage('pt-br');
-                                                        setLanguage('pt-br');
-                                                        setLanguageDropdownOpen(false);
-                                                        // Navigate to Portuguese version
-                                                        navigate('/PTBR/');
-                                                    }}
+                                                    onClick={() => handleLanguageChange('pt-br')}
                                                     type="button"
                                                 >
                                                     Português (Brasil)
                                                 </button>
                                                 <button 
                                                     class={`interface-language-option ${selectedLanguage === 'en' ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        setSelectedLanguage('en');
-                                                        setLanguage('en');
-                                                        setLanguageDropdownOpen(false);
-                                                        // Navigate to English version
-                                                        navigate('/');
-                                                    }}
+                                                    onClick={() => handleLanguageChange('en')}
                                                     type="button"
                                                 >
                                                     English (US)

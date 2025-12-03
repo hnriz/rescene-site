@@ -182,6 +182,22 @@ function Configuracoes() {
         }
     };
 
+    const handleLanguageChange = (newLang) => {
+        console.log('🌐 Mudando idioma em Configuracoes.js para:', newLang);
+        setSelectedLanguage(newLang);
+        setLanguage(newLang);
+        setLanguageDropdownOpen(false);
+        
+        // Delay para permitir que o contexto atualize antes de navegar
+        setTimeout(() => {
+            if (newLang === 'pt-br') {
+                navigate('/configuracoes');
+            } else {
+                navigate('/settings');
+            }
+        }, 100);
+    };
+
     if (loading) {
         return <div>Carregando...</div>;
     }
@@ -330,26 +346,14 @@ function Configuracoes() {
                                             <div class="interface-language-menu">
                                                 <button 
                                                     class={`interface-language-option ${selectedLanguage === 'pt-br' ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        setSelectedLanguage('pt-br');
-                                                        setLanguage('pt-br');
-                                                        setLanguageDropdownOpen(false);
-                                                        // Permanecer na página de configurações PT-BR
-                                                        navigate('/configuracoes');
-                                                    }}
+                                                    onClick={() => handleLanguageChange('pt-br')}
                                                     type="button"
                                                 >
                                                     Português (Brasil)
                                                 </button>
                                                 <button 
                                                     class={`interface-language-option ${selectedLanguage === 'en' ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        setSelectedLanguage('en');
-                                                        setLanguage('en');
-                                                        setLanguageDropdownOpen(false);
-                                                        // Navegar para versão em inglês
-                                                        navigate('/settings');
-                                                    }}
+                                                    onClick={() => handleLanguageChange('en')}
                                                     type="button"
                                                 >
                                                     English (US)
