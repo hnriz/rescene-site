@@ -220,8 +220,8 @@ app.post('/api/login', async (req, res, next) => {
             }
         });
     } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error('❌ Login error:', err.message, err.stack);
+        res.status(500).json({ success: false, message: 'Server error', error: err.message });
     }
 });
 
