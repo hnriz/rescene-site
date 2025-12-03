@@ -6,6 +6,7 @@ import Avatar from '../components-en/Avatar';
 import tmdbService from '../services/tmdbService';
 import reviewService from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -35,6 +36,7 @@ const Info = () => {
     const { movieId, type } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { language } = useLanguage();
     console.log('🎬 Info component mounted with movieId:', movieId, 'type:', type);
     const [media, setMedia] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -363,19 +365,20 @@ const Info = () => {
                 let fullMediaDetails = media;
                 
                 // Buscar detalhes completos da mídia para ter informações de créditos
+                const lang = language === 'pt-br' ? 'pt-BR' : 'en-US';
                 if (!media.credits) {
                     if (isTV) {
-                        fullMediaDetails = await tmdbService.getTVShowDetails(movieId, 'en-US');
-                        recs = await tmdbService.getTVRecommendations(movieId, 'en-US');
+                        fullMediaDetails = await tmdbService.getTVShowDetails(movieId, lang);
+                        recs = await tmdbService.getTVRecommendations(movieId, lang);
                     } else {
-                        fullMediaDetails = await tmdbService.getMovieDetails(movieId, 'en-US');
-                        recs = await tmdbService.getMovieRecommendations(movieId, 'en-US');
+                        fullMediaDetails = await tmdbService.getMovieDetails(movieId, lang);
+                        recs = await tmdbService.getMovieRecommendations(movieId, lang);
                     }
                 } else {
                     if (isTV) {
-                        recs = await tmdbService.getTVRecommendations(movieId, 'en-US');
+                        recs = await tmdbService.getTVRecommendations(movieId, lang);
                     } else {
-                        recs = await tmdbService.getMovieRecommendations(movieId, 'en-US');
+                        recs = await tmdbService.getMovieRecommendations(movieId, lang);
                     }
                 }
                 
