@@ -141,7 +141,20 @@ function Configuracoes() {
                 bio: formData.bio
             });
 
-            setTimeout(() => setMessage(''), 3000);
+            // Se o idioma foi mudado, atualizar contexto e navegar
+            if (selectedLanguage !== language) {
+                console.log('🌐 Salvando mudança de idioma para:', selectedLanguage);
+                setLanguage(selectedLanguage);
+                setTimeout(() => {
+                    if (selectedLanguage === 'pt-br') {
+                        navigate('/configuracoes');
+                    } else {
+                        navigate('/settings');
+                    }
+                }, 100);
+            } else {
+                setTimeout(() => setMessage(''), 3000);
+            }
         } catch (error) {
             // setMessage('❌ Erro ao atualizar perfil. Tente novamente.');
             console.error('Erro:', error);
@@ -183,19 +196,9 @@ function Configuracoes() {
     };
 
     const handleLanguageChange = (newLang) => {
-        console.log('🌐 Mudando idioma em Configuracoes.js para:', newLang);
+        console.log('🌐 Selecionando idioma em Configuracoes.js para:', newLang);
         setSelectedLanguage(newLang);
-        setLanguage(newLang);
         setLanguageDropdownOpen(false);
-        
-        // Delay para permitir que o contexto atualize antes de navegar
-        setTimeout(() => {
-            if (newLang === 'pt-br') {
-                navigate('/configuracoes');
-            } else {
-                navigate('/settings');
-            }
-        }, 100);
     };
 
     if (loading) {

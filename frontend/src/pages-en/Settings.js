@@ -144,7 +144,21 @@ function Settings() {
                     bio: formData.bio
                 });
                 setEditableUsername(false);
-                setTimeout(() => setMessage(''), 3000);
+                
+                // Se o idioma foi mudado, atualizar contexto e navegar
+                if (selectedLanguage !== language) {
+                    console.log('🌐 Salvando mudança de idioma para:', selectedLanguage);
+                    setLanguage(selectedLanguage);
+                    setTimeout(() => {
+                        if (selectedLanguage === 'pt-br') {
+                            navigate('/configuracoes');
+                        } else {
+                            navigate('/settings');
+                        }
+                    }, 100);
+                } else {
+                    setTimeout(() => setMessage(''), 3000);
+                }
             }
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -310,19 +324,9 @@ function Settings() {
     };
 
     const handleLanguageChange = (newLang) => {
-        console.log('🌐 Mudando idioma em Settings.js para:', newLang);
+        console.log('🌐 Selecionando idioma em Settings.js para:', newLang);
         setSelectedLanguage(newLang);
-        setLanguage(newLang);
         setLanguageDropdownOpen(false);
-        
-        // Delay para permitir que o contexto atualize antes de navegar
-        setTimeout(() => {
-            if (newLang === 'pt-br') {
-                navigate('/configuracoes');
-            } else {
-                navigate('/settings');
-            }
-        }, 100);
     };
 
     return (
