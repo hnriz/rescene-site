@@ -15,62 +15,39 @@ export const useSearch = () => {
     setIsLoading(true);
 
     try {
-      // Buscar filmes
-      const moviesResponse = await api.get('/movies', {
-        params: { search: query, limit: 5 }
-      }).catch(() => ({ data: { movies: [] } }));
-
-      // Buscar séries
-      const seriesResponse = await api.get('/series', {
-        params: { search: query, limit: 5 }
-      }).catch(() => ({ data: { series: [] } }));
-
-      // Buscar usuários
-      const usersResponse = await api.get('/users/search', {
-        params: { query, limit: 5 }
-      }).catch(() => ({ data: { users: [] } }));
+      // Usar o endpoint unificado de busca
+      const response = await api.get('/search', {
+        params: { q: query }
+      });
 
       const results = [];
 
-      // Adicionar filmes
-      if (moviesResponse.data.movies) {
-        moviesResponse.data.movies.forEach(movie => {
-          results.push({
-            id: `movie-${movie.id}`,
-            type: 'Filme',
-            title: movie.title,
-            year: movie.year,
-            image: movie.poster,
-            link: `/filme/${movie.id}`
-          });
-        });
-      }
+      // Processar resultados da API
+      if (response.data.results && Array.isArray(response.data.results)) {
+        response.data.results.forEach(item => {
+          // Determinar o tipo e link baseado no media_type
+          let link = '';
+          let type = '';
 
-      // Adicionar séries
-      if (seriesResponse.data.series) {
-        seriesResponse.data.series.forEach(series => {
-          results.push({
-            id: `series-${series.id}`,
-            type: 'Série',
-            title: series.title,
-            year: series.year,
-            image: series.poster,
-            link: `/serie/${series.id}`
-          });
-        });
-      }
+          if (item.mediaType === 'movie') {
+            link = `/filme/${item.externalId}`;
+            type = 'Filme';
+          } else if (item.mediaType === 'tv') {
+            link = `/serie/${item.externalId}`;
+            type = 'Série';
+          }
 
-      // Adicionar usuários
-      if (usersResponse.data.users) {
-        usersResponse.data.users.forEach(user => {
-          results.push({
-            id: `user-${user.id}`,
-            type: 'Usuário',
-            title: user.displayName,
-            username: `@${user.username}`,
-            image: user.avatar,
-            link: `/perfil/${user.username}`
-          });
+          if (link) {
+            results.push({
+              id: item.id,
+              type: type,
+              title: item.title,
+              year: item.year,
+              image: item.poster,
+              link: link,
+              rating: item.rating
+            });
+          }
         });
       }
 
