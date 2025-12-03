@@ -75,44 +75,12 @@ function Settings() {
         // Set language attribute on body
         document.body.setAttribute('data-language', 'en-US');
 
-        // Carregar scripts
-        const scripts = [
-            { src: '/js/settings.js', init: 'initSettings' },
-            { src: '/js/avatar.js', init: 'initAvatarUpload' }
-        ];
-
-        const scriptElements = scripts.map(({ src, init }) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = false; // Não async para garantir que execute em ordem
-            
-            script.onload = () => {
-                console.log(`✅ Script carregado: ${src}`);
-                
-                // Chamar função de inicialização com um pequeno delay para garantir que o DOM está pronto
-                setTimeout(() => {
-                    if (typeof window[init] === 'function') {
-                        console.log(`🚀 Executando inicialização: ${init}`);
-                        window[init]();
-                    }
-                }, 100);
-            };
-            
-            script.onerror = () => {
-                console.error(`❌ Erro ao carregar script: ${src}`);
-            };
-            
-            document.body.appendChild(script);
-            return script;
-        });
-
+        // Carregar scripts desativado - usando React state management em vez disso
+        // Scripts legados causam erros de DOM não encontrado
+        
         // Cleanup
         return () => {
-            scriptElements.forEach(script => {
-                if (document.body.contains(script)) {
-                    document.body.removeChild(script);
-                }
-            });
+            // Cleanup não necessário
         };
     }, []);
 
