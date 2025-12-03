@@ -158,6 +158,43 @@ app.get('/', (req, res) => {
     });
 });
 
+// Health check com test de conexão DB
+app.get('/api/health', async (req, res) => {
+    try {
+        const conn_test = await conn.getConnection();
+        await conn_test.execute('SELECT 1');
+        conn_test.release();
+        res.json({ status: 'ok', database: 'connected' });
+    } catch (err) {
+        console.error('❌ Health check DB error:', err.message);
+        res.status(500).json({ status: 'error', database: 'disconnected', error: err.message });
+    }
+});
+
+// Test login endpoint - sem bcrypt, só retorna usuário
+app.get('/api/test-user/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        console.log('🔍 Testando busca de usuário:', username);
+        
+        const conn_test = await conn.getConnection();
+        const [rows] = await conn_test.execute(
+            'SELECT id, username, email FROM user WHERE username = ? LIMIT 1',
+            [username]
+        );
+        conn_test.release();
+        
+        res.json({ 
+            found: rows.length > 0,
+            user: rows.length > 0 ? rows[0] : null,
+            rowCount: rows.length
+        });
+    } catch (err) {
+        console.error('❌ Test user error:', err.message);
+        res.status(500).json({ error: err.message, stack: err.stack });
+    }
+});
+
 // ==========================
 // 🧩 ROTAS DE USUÁRIO
 // ==========================
