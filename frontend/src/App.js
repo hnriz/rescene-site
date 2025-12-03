@@ -45,6 +45,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import { ProtectedEnRoute, ProtectedPTBRRoute } from "./hooks/useLanguageRedirect";
 import useScrollToTop from "./hooks/useScrollToTop";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -102,57 +104,57 @@ function AppContent() {
       <ErrorBoundary>
         {isPTBR ? <HeaderPTBR /> : <HeaderEN />}
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/user/:username" element={<Profile />} />
-          <Route path="/:username/profile" element={<Profile />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/movies" element={<Movies />} />
-          <Route path="/tvshows" element={<TVShows />} />
-          <Route path="/list" element={<List />} />
-          <Route path="/list/:listId" element={<List />} />
-          <Route path="/:username/list/:listId" element={<List />} />
-          <Route path="/listEdit" element={<ListEdit />} />
-          <Route path="/list-edit/:listId" element={<ListEdit />} />
-          <Route path="/:username/list-edit/:listId" element={<ListEdit />} />
-          <Route path="/rankMovies" element={<RankMovies />} />
-          <Route path="/rankTVShows" element={<RankTVShows />} />
-          <Route path="/rankUsers" element={<RankUsers />} />
-          <Route path="/rankComments" element={<RankComments />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/" element={<ProtectedEnRoute element={<Home />} />} />
+          <Route path="/profile" element={<ProtectedEnRoute element={<Profile />} />} />
+          <Route path="/user/:username" element={<ProtectedEnRoute element={<Profile />} />} />
+          <Route path="/:username/profile" element={<ProtectedEnRoute element={<Profile />} />} />
+          <Route path="/privacy" element={<ProtectedEnRoute element={<Privacy />} />} />
+          <Route path="/about" element={<ProtectedEnRoute element={<About />} />} />
+          <Route path="/terms" element={<ProtectedEnRoute element={<Terms />} />} />
+          <Route path="/contact" element={<ProtectedEnRoute element={<Contact />} />} />
+          <Route path="/search" element={<ProtectedEnRoute element={<Search />} />} />
+          <Route path="/movies" element={<ProtectedEnRoute element={<Movies />} />} />
+          <Route path="/tvshows" element={<ProtectedEnRoute element={<TVShows />} />} />
+          <Route path="/list" element={<ProtectedEnRoute element={<List />} />} />
+          <Route path="/list/:listId" element={<ProtectedEnRoute element={<List />} />} />
+          <Route path="/:username/list/:listId" element={<ProtectedEnRoute element={<List />} />} />
+          <Route path="/listEdit" element={<ProtectedEnRoute element={<ListEdit />} />} />
+          <Route path="/list-edit/:listId" element={<ProtectedEnRoute element={<ListEdit />} />} />
+          <Route path="/:username/list-edit/:listId" element={<ProtectedEnRoute element={<ListEdit />} />} />
+          <Route path="/rankMovies" element={<ProtectedEnRoute element={<RankMovies />} />} />
+          <Route path="/rankTVShows" element={<ProtectedEnRoute element={<RankTVShows />} />} />
+          <Route path="/rankUsers" element={<ProtectedEnRoute element={<RankUsers />} />} />
+          <Route path="/rankComments" element={<ProtectedEnRoute element={<RankComments />} />} />
+          <Route path="/settings" element={<ProtectedEnRoute element={<Settings />} />} />
           <Route path="/login-en" element={<LoginEN />} />
 
-          <Route path="/info/:movieId" element={<Info />} />
-          <Route path="/info/:type/:movieId" element={<Info />} />
+          <Route path="/info/:movieId" element={<ProtectedEnRoute element={<Info />} />} />
+          <Route path="/info/:type/:movieId" element={<ProtectedEnRoute element={<Info />} />} />
 
-          <Route path="/PTBR/" element={<HomePTBR />} />
-          <Route path="/perfil" element={<Perfil />} />
-          <Route path="/usuario/:username" element={<Perfil />} />
-          <Route path="/:username/perfil" element={<Perfil />} />
-          <Route path="/privacidade" element={<Privacidade />} />
-          <Route path="/sobre-nos" element={<SobreNos />} />
-          <Route path="/termos" element={<Termos />} />
-          <Route path="/contate" element={<Contate />} />
-          <Route path="/pesquisa" element={<Pesquisa />} />
-          <Route path="/filmes" element={<Filmes />} />
-          <Route path="/series" element={<SeriesPTBR />} />
-          <Route path="/lista" element={<Lista />} />
-          <Route path="/lista/:listId" element={<Lista />} />
-          <Route path="/:username/lista/:listId" element={<Lista />} />
-          <Route path="/editar-lista" element={<ListaEditar />} />
-          <Route path="/lista-editar/:listId" element={<ListaEditar />} />
-          <Route path="/:username/lista-editar/:listId" element={<ListaEditar />} />
-          <Route path="/info-ptbr/:movieId" element={<InfoPTBR />} />
-          <Route path="/info-ptbr/:type/:movieId" element={<InfoPTBR />} />
-          <Route path="/top-filmes" element={<RankFilmes />} />
-          <Route path="/top-series" element={<RankSeries />} />
-          <Route path="/top-usuarios" element={<RankUsuarios />} />
-          <Route path="/top-comentarios" element={<RankComentarios />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/PTBR/" element={<ProtectedPTBRRoute element={<HomePTBR />} />} />
+          <Route path="/perfil" element={<ProtectedPTBRRoute element={<Perfil />} />} />
+          <Route path="/usuario/:username" element={<ProtectedPTBRRoute element={<Perfil />} />} />
+          <Route path="/:username/perfil" element={<ProtectedPTBRRoute element={<Perfil />} />} />
+          <Route path="/privacidade" element={<ProtectedPTBRRoute element={<Privacidade />} />} />
+          <Route path="/sobre-nos" element={<ProtectedPTBRRoute element={<SobreNos />} />} />
+          <Route path="/termos" element={<ProtectedPTBRRoute element={<Termos />} />} />
+          <Route path="/contate" element={<ProtectedPTBRRoute element={<Contate />} />} />
+          <Route path="/pesquisa" element={<ProtectedPTBRRoute element={<Pesquisa />} />} />
+          <Route path="/filmes" element={<ProtectedPTBRRoute element={<Filmes />} />} />
+          <Route path="/series" element={<ProtectedPTBRRoute element={<SeriesPTBR />} />} />
+          <Route path="/lista" element={<ProtectedPTBRRoute element={<Lista />} />} />
+          <Route path="/lista/:listId" element={<ProtectedPTBRRoute element={<Lista />} />} />
+          <Route path="/:username/lista/:listId" element={<ProtectedPTBRRoute element={<Lista />} />} />
+          <Route path="/editar-lista" element={<ProtectedPTBRRoute element={<ListaEditar />} />} />
+          <Route path="/lista-editar/:listId" element={<ProtectedPTBRRoute element={<ListaEditar />} />} />
+          <Route path="/:username/lista-editar/:listId" element={<ProtectedPTBRRoute element={<ListaEditar />} />} />
+          <Route path="/info-ptbr/:movieId" element={<ProtectedPTBRRoute element={<InfoPTBR />} />} />
+          <Route path="/info-ptbr/:type/:movieId" element={<ProtectedPTBRRoute element={<InfoPTBR />} />} />
+          <Route path="/top-filmes" element={<ProtectedPTBRRoute element={<RankFilmes />} />} />
+          <Route path="/top-series" element={<ProtectedPTBRRoute element={<RankSeries />} />} />
+          <Route path="/top-usuarios" element={<ProtectedPTBRRoute element={<RankUsuarios />} />} />
+          <Route path="/top-comentarios" element={<ProtectedPTBRRoute element={<RankComentarios />} />} />
+          <Route path="/configuracoes" element={<ProtectedPTBRRoute element={<Configuracoes />} />} />
           <Route path="/login-ptbr" element={<LoginPTBR />} />
 
           {/* Error Pages */}
@@ -172,21 +174,23 @@ function App() {
   console.log('✅ App component rendering');
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-        <ToastContainer
-          position="bottom-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-      </BrowserRouter>
+      <LanguageProvider>
+        <BrowserRouter>
+          <AppContent />
+          <ToastContainer
+            position="bottom-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </BrowserRouter>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

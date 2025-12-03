@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
 import BackButtonPTBR from '../componentes-ptbr/BackButtonPTBR';
 import AvatarPTBR from '../componentes-ptbr/AvatarPTBR';
@@ -20,6 +21,7 @@ import {
 
 function Configuracoes() {
     const { user, updateUser, logout, loading } = useAuth();
+    const { language, setLanguage } = useLanguage();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: '',
@@ -30,7 +32,7 @@ function Configuracoes() {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState('pt-BR');
+    const [selectedLanguage, setSelectedLanguage] = useState(language);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
 
     const scriptsLoaded = useRef({ settings: false, avatar: false });
@@ -320,27 +322,33 @@ function Configuracoes() {
                                             type="button"
                                         >
                                             <span>
-                                                {selectedLanguage === 'pt-BR' ? 'Português (Brasil)' : 'English (US)'}
+                                                {selectedLanguage === 'pt-br' ? 'Português (Brasil)' : 'English (US)'}
                                             </span>
                                             <FontAwesomeIcon icon={faChevronDown} />
                                         </button>
                                         {languageDropdownOpen && (
                                             <div class="interface-language-menu">
                                                 <button 
-                                                    class={`interface-language-option ${selectedLanguage === 'pt-BR' ? 'selected' : ''}`}
+                                                    class={`interface-language-option ${selectedLanguage === 'pt-br' ? 'selected' : ''}`}
                                                     onClick={() => {
-                                                        setSelectedLanguage('pt-BR');
+                                                        setSelectedLanguage('pt-br');
+                                                        setLanguage('pt-br');
                                                         setLanguageDropdownOpen(false);
+                                                        // Permanecer na página de configurações PT-BR
+                                                        navigate('/configuracoes');
                                                     }}
                                                     type="button"
                                                 >
                                                     Português (Brasil)
                                                 </button>
                                                 <button 
-                                                    class={`interface-language-option ${selectedLanguage === 'en-US' ? 'selected' : ''}`}
+                                                    class={`interface-language-option ${selectedLanguage === 'en' ? 'selected' : ''}`}
                                                     onClick={() => {
-                                                        setSelectedLanguage('en-US');
+                                                        setSelectedLanguage('en');
+                                                        setLanguage('en');
                                                         setLanguageDropdownOpen(false);
+                                                        // Navegar para versão em inglês
+                                                        navigate('/settings');
                                                     }}
                                                     type="button"
                                                 >
