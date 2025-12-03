@@ -32,8 +32,9 @@ function Settings() {
     const [message, setMessage] = useState('');
     const [editableUsername, setEditableUsername] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState(language);
+    const [tempLanguage, setTempLanguage] = useState(language);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+    const [languageChanged, setLanguageChanged] = useState(false);
 
     const scriptsLoaded = useRef({ settings: false, avatar: false });
 
@@ -146,17 +147,19 @@ function Settings() {
                 setEditableUsername(false);
                 
                 // Se o idioma foi mudado, atualizar contexto e navegar
-                if (selectedLanguage !== language) {
-                    console.log('🌐 Salvando mudança de idioma para:', selectedLanguage);
-                    setLanguage(selectedLanguage);
+                if (languageChanged && tempLanguage !== language) {
+                    console.log('🌐 Salvando mudança de idioma para:', tempLanguage);
+                    setLanguage(tempLanguage);
+                    setLanguageChanged(false);
                     setTimeout(() => {
-                        if (selectedLanguage === 'pt-br') {
+                        if (tempLanguage === 'pt-br') {
                             navigate('/configuracoes');
                         } else {
                             navigate('/settings');
                         }
                     }, 100);
                 } else {
+                    setLanguageChanged(false);
                     setTimeout(() => setMessage(''), 3000);
                 }
             }
@@ -324,8 +327,9 @@ function Settings() {
     };
 
     const handleLanguageChange = (newLang) => {
-        console.log('🌐 Selecionando idioma em Settings.js para:', newLang);
-        setSelectedLanguage(newLang);
+        console.log('🌐 Selecionando idioma temporário em Settings.js para:', newLang);
+        setTempLanguage(newLang);
+        setLanguageChanged(true);
         setLanguageDropdownOpen(false);
     };
 
@@ -447,21 +451,22 @@ function Settings() {
                                             type="button"
                                         >
                                             <span>
-                                                {selectedLanguage === 'pt-br' ? 'Português (Brasil)' : 'English (US)'}
+                                                {tempLanguage === 'pt-br' ? 'Português (Brasil)' : 'English (US)'}
+                                                {languageChanged && <span style={{marginLeft: '8px', color: '#ff9800'}}>*</span>}
                                             </span>
                                             <FontAwesomeIcon icon={faChevronDown} />
                                         </button>
                                         {languageDropdownOpen && (
                                             <div class="interface-language-menu">
                                                 <button 
-                                                    class={`interface-language-option ${selectedLanguage === 'pt-br' ? 'selected' : ''}`}
+                                                    class={`interface-language-option ${tempLanguage === 'pt-br' ? 'selected' : ''}`}
                                                     onClick={() => handleLanguageChange('pt-br')}
                                                     type="button"
                                                 >
                                                     Português (Brasil)
                                                 </button>
                                                 <button 
-                                                    class={`interface-language-option ${selectedLanguage === 'en' ? 'selected' : ''}`}
+                                                    class={`interface-language-option ${tempLanguage === 'en' ? 'selected' : ''}`}
                                                     onClick={() => handleLanguageChange('en')}
                                                     type="button"
                                                 >
