@@ -416,7 +416,7 @@ function Configuracoes() {
 
                         {/* Seção de Avatar */}
                         {activeSection === 'avatar' && (
-                            <section id="avatar-section" class="content-section" data-section="avatar">
+                            <section id="avatar-section" class="content-section active" data-section="avatar">
                                 <div class="section-header-settings">
                                     <h2><FontAwesomeIcon icon={faImage} /> Avatar</h2>
                                     <p>Personalize sua imagem de perfil</p>
@@ -459,7 +459,7 @@ function Configuracoes() {
 
                         {/* Seção de Segurança */}
                         {activeSection === 'account' && (
-                            <section id="account-section" class="content-section" data-section="account">
+                            <section id="account-section" class="content-section active" data-section="account">
                                 <div class="section-header-settings">
                                     <h2><FontAwesomeIcon icon={faKey} /> Segurança da Conta</h2>
                                     <p>Gerencie a segurança e as sessões da sua conta</p>

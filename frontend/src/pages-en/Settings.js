@@ -496,7 +496,7 @@ function Settings() {
 
                     {/* Seção de Avatar */}
                     {activeSection === 'avatar' && (
-                    <section id="avatar-section" class="content-section" data-section="avatar">
+                    <section id="avatar-section" class="content-section active" data-section="avatar">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faImage} /> Avatar</h2>
                             <p>Customize your profile picture.</p>
@@ -664,7 +664,7 @@ function Settings() {
 
                     {/* Seção de Segurança */}
                     {activeSection === 'account' && (
-                    <section id="account-section" class="content-section" data-section="account">
+                    <section id="account-section" class="content-section active" data-section="account">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faKey} />Account security</h2>
                             <p>Manage your security.</p>
