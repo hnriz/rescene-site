@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -36,8 +36,6 @@ function Configuracoes() {
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
     const [languageChanged, setLanguageChanged] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
-
-    const scriptsLoaded = useRef({ settings: false, avatar: false });
 
     useEffect(() => {
         // Carregar dados do usuário

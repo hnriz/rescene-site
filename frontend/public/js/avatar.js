@@ -34,9 +34,11 @@ window.initAvatarUpload = function() {
     console.log('✅ Avatar Upload inicializado com sucesso!');
 };
 
-// ✅ Se já estiver carregado, executa imediatamente
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    window.initAvatarUpload();
-} else {
-    document.addEventListener('DOMContentLoaded', window.initAvatarUpload);
-}
+// ❌ DESATIVADO - O React agora gerencia os avatares
+// O script legado não deve auto-executar pois causa conflito com React
+// Se já estiver carregado, executa imediatamente
+// if (document.readyState === 'complete' || document.readyState === 'interactive') {
+//     window.initAvatarUpload();
+// } else {
+//     document.addEventListener('DOMContentLoaded', window.initAvatarUpload);
+// }

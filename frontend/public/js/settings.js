@@ -1004,9 +1004,11 @@ window.initSettings = function () {
   console.log('✅ Settings inicializado com sucesso!');
 };
 
-// ✅ Se já estiver carregado, executa imediatamente
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  window.initSettings();
-} else {
-  document.addEventListener('DOMContentLoaded', window.initSettings);
-}
+// ❌ DESATIVADO - O React agora gerencia as configurações
+// O script legado não deve auto-executar pois causa conflito com React
+// Se já estiver carregado, executa imediatamente
+// if (document.readyState === 'complete' || document.readyState === 'interactive') {
+//   window.initSettings();
+// } else {
+//   document.addEventListener('DOMContentLoaded', window.initSettings);
+// }
