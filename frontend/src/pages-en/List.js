@@ -107,6 +107,8 @@ function List() {
                 let listData = data.list || data;
                 
                 // Update posters with correct language (EN)
+                // TODO: /api/media endpoint doesn't exist - SKIPPING
+                /* COMMENTED OUT - /api/media endpoint not available
                 if (listData.items && listData.items.length > 0) {
                     const updatedItems = await Promise.all(listData.items.map(async (item) => {
                         try {
@@ -128,6 +130,7 @@ function List() {
                         items: updatedItems
                     };
                 }
+                */
                 
                 setList(listData);
                 setLikesCount(listData['likes-count'] || 0);

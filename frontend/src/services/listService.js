@@ -1,15 +1,13 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-// Remove /api from URL if it's already there
-const API_URL = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
-
+// API_BASE_URL já inclui /api, então use diretamente
 const listService = {
   // Criar uma nova lista
   async createList(name, description = '', privacy = 'private') {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${API_BASE_URL}/api/lists`, {
+      const response = await fetch(`${API_BASE_URL}/lists`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +33,7 @@ const listService = {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${API_BASE_URL}/api/lists`, {
+      const response = await fetch(`${API_BASE_URL}/lists`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -83,7 +81,7 @@ const listService = {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${API_BASE_URL}/api/lists/${listId}`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +106,7 @@ const listService = {
   async likeList(listId) {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -136,7 +134,7 @@ const listService = {
       }
 
       console.log(`🔍 Verificando like da lista ${listId}...`);
-      const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/liked`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listId}/liked`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -160,7 +158,7 @@ const listService = {
   async saveList(listId) {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/save`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listId}/save`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -188,7 +186,7 @@ const listService = {
       }
 
       console.log(`🔍 Verificando save da lista ${listId}...`);
-      const response = await fetch(`${API_BASE_URL}/api/lists/${listId}/saved`, {
+      const response = await fetch(`${API_BASE_URL}/lists/${listId}/saved`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -213,7 +211,7 @@ const listService = {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${API_BASE_URL}/api/user/saved-lists`, {
+      const response = await fetch(`${API_BASE_URL}/user/saved-lists`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
