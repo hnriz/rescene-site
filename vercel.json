@@ -1,5 +1,4 @@
 {
   "buildCommand": "npm install && DISABLE_ESLINT_PLUGIN=true npm run build",
-  "outputDirectory": "build",
-  "rootDirectory": "frontend"
+  "outputDirectory": "build"
 }
