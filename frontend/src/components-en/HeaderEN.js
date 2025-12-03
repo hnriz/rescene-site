@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
+import { useSearch } from '../hooks/useSearch';
 import Avatar from './Avatar';
 import logo from '../img/logo-branco.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -26,12 +27,12 @@ import {
 function HeaderEN() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const { searchResults, isLoading, handleSearchInput, clearResults } = useSearch();
     const [userData, setUserData] = useState(user);
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     // const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
     const [placeholderText, setPlaceholderText] = useState('');
     
     const searchInputRef = useRef(null);
@@ -89,28 +90,10 @@ function HeaderEN() {
     }, []);
 
     // Handler de busca
-    const handleSearchInput = (e) => {
+    const handleSearchInputChange = (e) => {
         const query = e.target.value;
         setSearchQuery(query);
-
-        if (query.length > 2) {
-            // Simulação de resultados (em um caso real, viria de uma API)
-            const mockResults = [
-                { type: 'Filme', title: 'Interestelar', year: 2014, image: '../src/img/movie1.jpg' },
-                { type: 'Série', title: 'Breaking Bad', year: '2008-2013', image: '../src/img/series1.jpg' },
-                { type: 'Usuário', title: 'Maria Silva', username: '@maria_silva', image: '../src/img/user1.jpg' },
-                { type: 'Filme', title: 'O Poderoso Chefão', year: 1972, image: '../src/img/movie2.jpg' }
-            ];
-
-            const filteredResults = mockResults.filter(item => 
-                item.title.toLowerCase().includes(query.toLowerCase()) || 
-                (item.username && item.username.toLowerCase().includes(query.toLowerCase()))
-            );
-
-            setSearchResults(filteredResults);
-        } else {
-            setSearchResults([]);
-        }
+        handleSearchInput(query);
     };
 
     // Toggle dropdowns
@@ -202,26 +185,36 @@ function HeaderEN() {
                             // placeholder=" " 
                             autoComplete="off"
                             value={searchQuery}
-                            onChange={handleSearchInput}
+                            onChange={handleSearchInputChange}
                         />
-                        {/* <div 
-                            id="search-placeholder"
-                            style={{ display: searchQuery ? 'none' : 'block' }}
-                        >
-                            {placeholderText}
-                        </div> */}
                         <button type="submit" className="search-btn-header">
                             <FontAwesomeIcon icon={faSearch} />
                         </button>
                         <div 
                             className="search-results" 
                             id="search-results"
-                            style={{ display: searchResults.length > 0 ? 'block' : 'none' }}
+                            style={{ display: searchResults.length > 0 || isLoading ? 'block' : 'none' }}
                         >
-                            {searchResults.length > 0 ? (
-                                searchResults.map((result, index) => (
-                                    <a href="#" className="search-result-item" key={index}>
-                                        <img src={result.image} alt={result.title} />
+                            {isLoading && (
+                                <div className="search-loading">
+                                    <div className="spinner"></div>
+                                    Searching...
+                                </div>
+                            )}
+                            {!isLoading && searchResults.length > 0 ? (
+                                searchResults.map((result) => (
+                                    <a 
+                                        href={result.link} 
+                                        className="search-result-item" 
+                                        key={result.id}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            navigate(result.link);
+                                            setSearchQuery('');
+                                            clearResults();
+                                        }}
+                                    >
+                                        <img src={result.image} alt={result.title} onError={(e) => {e.target.src = 'https://via.placeholder.com/40'}} />
                                         <div className="search-result-info">
                                             <h4>{result.title}</h4>
                                             <p>
@@ -232,10 +225,9 @@ function HeaderEN() {
                                         </div>
                                     </a>
                                 ))
-                            ) : (
-                                <div className="no-results">No found results</div>
-                            )}
-                        </div>
+                            ) : !isLoading && searchQuery.length > 0 ? (
+                                <div className="no-results">No results found</div>
+                            ) : null}
                     </div>
                 </div>
 
