@@ -18,5 +18,5 @@ export const useLanguageRedirect = () => {
     return language === 'pt-br' ? ptbrPath : enPath;
   };
   
-  return { getLocalizedPath };\
+  return { getLocalizedPath };
 };

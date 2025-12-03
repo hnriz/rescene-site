@@ -304,14 +304,14 @@ function Settings() {
         <>
             <BackButton />
             <main class="settings-container">
-                {/* <!-- Cabeçalho interno das configurações --> */}
+                {/* Cabeçalho interno das configurações */}
                 <div class="settings-header">
                 <h1><FontAwesomeIcon icon={faCog} /> Settings</h1>
                 <p>Manage your preferences and account settings.</p>
             </div>
 
             <div class="settings-layout">
-                {/* <!-- Navegação lateral --> */}
+                {/* Navegação lateral */}
                 <aside class="settings-sidebar">
                     <nav class="settings-nav">
                         <div class="nav-category">
@@ -368,9 +368,9 @@ function Settings() {
 
                 </aside>
 
-                {/* <!-- Conteúdo principal --> */}
+                {/* Conteúdo principal */}
                 <div class="settings-content">
-                    {/* <!-- Seção de Perfil --> */}
+                    {/* Seção de Perfil */}
                     {activeSection === 'profile' && (
                     <section id="profile-section" class="content-section active" data-section="profile">
                         <div class="section-header-settings">
@@ -494,7 +494,7 @@ function Settings() {
                     </section>
                     )}
 
-                    {/* <!-- Seção de Avatar --> */}
+                    {/* Seção de Avatar */}
                     {activeSection === 'avatar' && (
                     <section id="avatar-section" class="content-section" data-section="avatar">
                         <div class="section-header-settings">
@@ -568,7 +568,7 @@ function Settings() {
                     </section>
                     )}
 
-                    {/* <!-- Seção de Idioma e Região --> */}
+                    {/* Seção de Idioma e Região */}
                     {/* <section id="language-section" class="content-section">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faGlobe} />Language and region</h2>
@@ -662,7 +662,7 @@ function Settings() {
                         </form>
                     </section> */}
 
-                    {/* <!-- Seção de Segurança --> */}
+                    {/* Seção de Segurança */}
                     {activeSection === 'account' && (
                     <section id="account-section" class="content-section" data-section="account">
                         <div class="section-header-settings">
@@ -671,7 +671,7 @@ function Settings() {
                         </div>
 
                         <div class="account-sections">
-                            {/* <!-- Alteração de senha --> */}
+                            {/* Alteração de senha */}
                             <div class="account-subsection">
                                 <h3>Change password</h3>
 
@@ -698,7 +698,7 @@ function Settings() {
                                 </form>
                             </div>
 
-                            {/* <!-- Autenticação de dois fatores --> */}
+                            {/* Autenticação de dois fatores */}
                             {/* <div class="account-subsection">
                                 <h3>Autenticação de dois fatores</h3>
 
@@ -712,7 +712,7 @@ function Settings() {
                                 <button class="btn btn-secondary" id="enable-2fa">Ativar autenticação de dois fatores</button>
                             </div> */}
 
-                            {/* <!-- Sessões ativas --> */}
+                            {/* Sessões ativas */}
                             {/* <div class="account-subsection">
                                 <h3>Sessões ativas</h3>
 
@@ -743,7 +743,7 @@ function Settings() {
                                 </div>
                             </div> */}
 
-                            {/* <!-- Zona de perigo --> */}
+                            {/* Zona de perigo */}
                             <div class="account-subsection danger-zone">
                                 <h3>Danger zone</h3>
 
@@ -773,7 +773,7 @@ function Settings() {
                         </div>
                     </section>
                     )}
-                    {/* <!-- Seção de Privacidade --> */}
+                    {/* Seção de Privacidade */}
                     {/* <section id="privacy-section" class="content-section">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faLock} /> Privacy</h2>
@@ -892,7 +892,7 @@ function Settings() {
                         </form>
                     </section> */}
 
-                    {/* <!-- Seção de Notificações --> */}
+                    {/* Seção de Notificações */}
                     {/* <section id="notifications-section" class="content-section">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faBell} /> Notification</h2>
@@ -1038,7 +1038,7 @@ function Settings() {
                     </section> */}
 
 
-                    {/* <!-- Seção de Acessibilidade --> */}
+                    {/* Seção de Acessibilidade */}
                     {/* <section id="accessibility-section" class="content-section">
                         <div class="section-header-settings">
                             <h2><i class="fas fa-universal-access"></i> Acessibilidade</h2>
@@ -1114,8 +1114,7 @@ function Settings() {
                             </div>
                         </form>
                     </section> */}
-
-                    
+                    )}
                 </div>
             </div>
 
