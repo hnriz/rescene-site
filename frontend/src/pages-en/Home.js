@@ -401,8 +401,10 @@ function Home() {
         const loadReviews = async () => {
             try {
                 setLoadingReviews(true);
-                const reviews = await communityReviewService.getCommunityReviews(4);
-                setCommunityReviews(reviews);
+                // TODO: Fix community-reviews endpoint 500 error
+                // const reviews = await communityReviewService.getCommunityReviews(4);
+                // setCommunityReviews(reviews);
+                setCommunityReviews([]);
             } catch (err) {
                 console.error("Error loading community reviews:", err);
             } finally {
