@@ -135,25 +135,27 @@ function Configuracoes() {
                 }
             );
 
-            // setMessage('✅ Perfil atualizado com sucesso!');
-            updateUser({
-                displayName: formData.displayName,
-                bio: formData.bio
-            });
+            if (response.data.success) {
+                // setMessage('✅ Perfil atualizado com sucesso!');
+                updateUser({
+                    displayName: formData.displayName,
+                    bio: formData.bio
+                });
 
-            // Se o idioma foi mudado, atualizar contexto e navegar
-            if (selectedLanguage !== language) {
-                console.log('🌐 Salvando mudança de idioma para:', selectedLanguage);
-                setLanguage(selectedLanguage);
-                setTimeout(() => {
-                    if (selectedLanguage === 'pt-br') {
-                        navigate('/configuracoes');
-                    } else {
-                        navigate('/settings');
-                    }
-                }, 100);
-            } else {
-                setTimeout(() => setMessage(''), 3000);
+                // Se o idioma foi mudado, atualizar contexto e navegar
+                if (selectedLanguage !== language) {
+                    console.log('🌐 Salvando mudança de idioma para:', selectedLanguage);
+                    setLanguage(selectedLanguage);
+                    setTimeout(() => {
+                        if (selectedLanguage === 'pt-br') {
+                            navigate('/configuracoes');
+                        } else {
+                            navigate('/settings');
+                        }
+                    }, 100);
+                } else {
+                    setTimeout(() => setMessage(''), 3000);
+                }
             }
         } catch (error) {
             // setMessage('❌ Erro ao atualizar perfil. Tente novamente.');
