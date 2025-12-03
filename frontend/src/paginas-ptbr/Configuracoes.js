@@ -35,6 +35,7 @@ function Configuracoes() {
     const [tempLanguage, setTempLanguage] = useState(language);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
     const [languageChanged, setLanguageChanged] = useState(false);
+    const [activeSection, setActiveSection] = useState('profile');
 
     const scriptsLoaded = useRef({ settings: false, avatar: false });
 
@@ -204,18 +205,27 @@ function Configuracoes() {
                     <nav class="settings-nav">
                         <div class="nav-category">
                             <h3>Conta</h3>
-                            <a href="#" onClick={(e) => e.preventDefault()} class="nav-item active" data-section="profile">
+                            <button 
+                                onClick={() => setActiveSection('profile')}
+                                class={`nav-item ${activeSection === 'profile' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faUser} />
                                 <span>Perfil</span>
-                            </a>
-                            <a href="#" onClick={(e) => e.preventDefault()} class="nav-item" data-section="avatar">
+                            </button>
+                            <button 
+                                onClick={() => setActiveSection('avatar')}
+                                class={`nav-item ${activeSection === 'avatar' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faImage} />
                                 <span>Avatar</span>
-                            </a>
-                            <a href="#" onClick={(e) => e.preventDefault()} class="nav-item" data-section="account">
+                            </button>
+                            <button 
+                                onClick={() => setActiveSection('account')}
+                                class={`nav-item ${activeSection === 'account' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faKey} />
                                 <span>Segurança</span>
-                            </a>
+                            </button>
                         </div>
 
                         {/* <div class="nav-category">
@@ -250,6 +260,7 @@ function Configuracoes() {
                 {/* <!-- Conteúdo principal --> */}
                 <div class="settings-content">
                     {/* <!-- Seção de Perfil --> */}
+                    {activeSection === 'profile' && (
                     <section id="profile-section" class="content-section active" data-section="profile">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faUser} /> Perfil</h2>
@@ -403,8 +414,10 @@ function Configuracoes() {
                             </div>
                         </form>
                     </section>
+                    )}
 
                     {/* <!-- Seção de Avatar --> */}
+                    {activeSection === 'avatar' && (
                     <section id="avatar-section" class="content-section" data-section="avatar">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faImage} /> Avatar</h2>
@@ -533,6 +546,7 @@ function Configuracoes() {
                     </section> */}
 
                     {/* <!-- Seção de Segurança --> */}
+                    {activeSection === 'account' && (
                     <section id="account-section" class="content-section" data-section="account">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faKey} /> Segurança da Conta</h2>
@@ -1005,6 +1019,7 @@ function Configuracoes() {
                     
                 </div>
             </div>
+            )}
 
             {/* Modal de Confirmação de Deleção */}
             {console.log('📋 showDeleteConfirm:', showDeleteConfirm)}

@@ -35,6 +35,7 @@ function Settings() {
     const [tempLanguage, setTempLanguage] = useState(language);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
     const [languageChanged, setLanguageChanged] = useState(false);
+    const [activeSection, setActiveSection] = useState('profile');
 
     const scriptsLoaded = useRef({ settings: false, avatar: false });
 
@@ -317,18 +318,27 @@ function Settings() {
                     <nav class="settings-nav">
                         <div class="nav-category">
                             <h3>Account</h3>
-                            <a href="#profile" class="nav-item active" data-section="profile">
+                            <button 
+                                onClick={() => setActiveSection('profile')}
+                                class={`nav-item ${activeSection === 'profile' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faUser} />
                                 <span>Profile</span>
-                            </a>
-                            <a href="#avatar" class="nav-item" data-section="avatar">
+                            </button>
+                            <button 
+                                onClick={() => setActiveSection('avatar')}
+                                class={`nav-item ${activeSection === 'avatar' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faImage} />
                                 <span>Avatar</span>
-                            </a>
-                            <a href="#account" class="nav-item" data-section="account">
+                            </button>
+                            <button 
+                                onClick={() => setActiveSection('account')}
+                                class={`nav-item ${activeSection === 'account' ? 'active' : ''}`}
+                            >
                                 <FontAwesomeIcon icon={faKey} />
                                 <span>Security</span>
-                            </a>
+                            </button>
                         </div>
 
                         {/* <div class="nav-category">
@@ -363,6 +373,7 @@ function Settings() {
                 {/* <!-- Conteúdo principal --> */}
                 <div class="settings-content">
                     {/* <!-- Seção de Perfil --> */}
+                    {activeSection === 'profile' && (
                     <section id="profile-section" class="content-section active" data-section="profile">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faUser} /> Profile</h2>
@@ -483,8 +494,10 @@ function Settings() {
                             </div>
                         </form>
                     </section>
+                    )}
 
                     {/* <!-- Seção de Avatar --> */}
+                    {activeSection === 'avatar' && (
                     <section id="avatar-section" class="content-section" data-section="avatar">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faImage} /> Avatar</h2>
@@ -555,6 +568,7 @@ function Settings() {
                             </button>
                         </div>
                     </section>
+                    )}
 
                     {/* <!-- Seção de Idioma e Região --> */}
                     {/* <section id="language-section" class="content-section">
@@ -651,6 +665,7 @@ function Settings() {
                     </section> */}
 
                     {/* <!-- Seção de Segurança --> */}
+                    {activeSection === 'account' && (
                     <section id="account-section" class="content-section" data-section="account">
                         <div class="section-header-settings">
                             <h2><FontAwesomeIcon icon={faKey} />Account security</h2>
@@ -759,6 +774,7 @@ function Settings() {
                             </div>
                         </div>
                     </section>
+                    )}
                     {/* <!-- Seção de Privacidade --> */}
                     {/* <section id="privacy-section" class="content-section">
                         <div class="section-header-settings">
