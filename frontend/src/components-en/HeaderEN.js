@@ -228,6 +228,7 @@ function HeaderEN() {
                             ) : !isLoading && searchQuery.length > 0 ? (
                                 <div className="no-results">No results found</div>
                             ) : null}
+                        </div>
                     </div>
                 </div>
 
