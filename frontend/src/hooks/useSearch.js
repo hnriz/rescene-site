@@ -1,10 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
 import { api } from '../services/axiosConfig';
+import { useLanguage } from '../context/LanguageContext';
 
 export const useSearch = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const debounceTimerRef = useRef(null);
+  const { language } = useLanguage();
 
   const search = useCallback(async (query) => {
     if (!query || query.length < 2) {
@@ -16,8 +18,9 @@ export const useSearch = () => {
 
     try {
       // Usar o endpoint unificado de busca
+      const lang = language === 'en' ? 'en-US' : 'pt-BR';
       const response = await api.get('/search', {
-        params: { q: query }
+        params: { q: query, language: lang }
       });
 
       const results = [];
@@ -58,7 +61,7 @@ export const useSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [language]);
 
   const handleSearchInput = useCallback((query) => {
     // Limpar o timer anterior
