@@ -252,7 +252,8 @@ window.initLists = function() {
                 }
                 
                 // Fazer chamada à API
-                const response = await fetch('http://localhost:3001/api/lists', {
+                const API_URL = window.API_URL || 'http://localhost:3001/api';
+                const response = await fetch(`${API_URL}/lists`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -516,7 +517,8 @@ window.initLists = function() {
                 toast.loading('Deletando lista...');
             }
             
-            const response = await fetch(`http://localhost:3001/api/lists/${listId}`, {
+            const API_URL = window.API_URL || 'http://localhost:3001/api';
+            const response = await fetch(`${API_URL}/lists/${listId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

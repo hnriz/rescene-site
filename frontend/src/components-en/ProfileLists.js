@@ -47,9 +47,10 @@ function ProfileLists({ userId, isOwnProfile }) {
 
         // Se é o perfil do próprio usuário, usar /api/lists
         // Se é outro usuário, usar /api/user/:userId/lists
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
         const endpoint = isOwnProfile 
-          ? 'http://localhost:3001/api/lists'
-          : `http://localhost:3001/api/user/${userId}/lists`;
+          ? `${API_URL}/lists`
+          : `${API_URL}/user/${userId}/lists`;
 
         const response = await fetch(endpoint, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -80,7 +81,8 @@ function ProfileLists({ userId, isOwnProfile }) {
 
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3001/api/user/saved-lists', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const response = await fetch(`${API_URL}/user/saved-lists`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
 

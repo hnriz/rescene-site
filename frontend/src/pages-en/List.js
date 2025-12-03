@@ -93,7 +93,8 @@ function List() {
                 const token = localStorage.getItem('token');
                 
                 // Fetch list data
-                const response = await fetch(`http://localhost:3001/api/lists/${listId}`, {
+                const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+                const response = await fetch(`${API_URL}/lists/${listId}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });
 
@@ -109,7 +110,7 @@ function List() {
                 if (listData.items && listData.items.length > 0) {
                     const updatedItems = await Promise.all(listData.items.map(async (item) => {
                         try {
-                            const mediaResponse = await fetch(`http://localhost:3001/api/media/${item.id || item.movieId}?lang=en`);
+                            const mediaResponse = await fetch(`${API_URL}/media/${item.id || item.movieId}?lang=en`);
                             if (mediaResponse.ok) {
                                 const mediaData = await mediaResponse.json();
                                 return {

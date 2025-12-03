@@ -63,7 +63,8 @@ const Perfil = () => {
       // Buscar dados do usuário via endpoint público
       const fetchUserProfile = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/api/user/${username}`);
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+          const response = await fetch(`${API_URL}/user/${username}`);
           if (response.ok) {
             const data = await response.json();
             setProfileUser(data);

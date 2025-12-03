@@ -79,7 +79,8 @@ const Lista = () => {
                 console.log('📂 Carregando lista:', listId);
 
                 // Buscar dados da lista
-                const response = await fetch(`http://localhost:3001/api/lists/${listId}`, {
+                const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+                const response = await fetch(`${API_URL}/lists/${listId}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });
 
@@ -95,7 +96,7 @@ const Lista = () => {
                 if (lista.items && lista.items.length > 0) {
                     const updatedItems = await Promise.all(lista.items.map(async (item) => {
                         try {
-                            const mediaResponse = await fetch(`http://localhost:3001/api/media/${item.id || item.movieId}?lang=pt-BR`);
+                            const mediaResponse = await fetch(`${API_URL}/media/${item.id || item.movieId}?lang=pt-BR`);
                             if (mediaResponse.ok) {
                                 const mediaData = await mediaResponse.json();
                                 return {

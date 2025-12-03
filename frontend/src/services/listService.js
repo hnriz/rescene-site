@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+// Remove /api from URL if it's already there
+const API_URL = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
 
 const listService = {
   // Criar uma nova lista
