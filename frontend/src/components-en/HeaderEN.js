@@ -130,10 +130,14 @@ function HeaderEN() {
         }
     };
 
-    // Fechar dropdowns ao clicar fora
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (!event.target.closest('.user-dropdown')) {
+            if (
+                !event.target.closest('.user-dropdown') &&
+                !event.target.closest('.search-container') &&
+                !event.target.closest('.search-results')
+            ) {
                 setIsUserDropdownOpen(false);
                 // setIsNotificationDropdownOpen(false);
             }
@@ -144,6 +148,21 @@ function HeaderEN() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Close search results when clicking on a result
+    useEffect(() => {
+        const handleSearchResultClick = (event) => {
+            if (event.target.closest('.search-result-item')) {
+                setSearchQuery('');
+                clearResults();
+            }
+        };
+
+        document.addEventListener('click', handleSearchResultClick);
+        return () => {
+            document.removeEventListener('click', handleSearchResultClick);
+        };
+    }, [clearResults]);
 
     return (
         <header className="main-header">

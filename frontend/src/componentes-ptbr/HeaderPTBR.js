@@ -134,7 +134,13 @@ function HeaderPTBR() {
     // Fechar dropdowns ao clicar fora
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (!event.target.closest('.user-dropdown') && !event.target.closest('.notification-dropdown')) {
+            // Não fechar se clicar dentro de search results ou dropdowns
+            if (
+                !event.target.closest('.user-dropdown') && 
+                !event.target.closest('.notification-dropdown') &&
+                !event.target.closest('.search-container') &&
+                !event.target.closest('.search-results')
+            ) {
                 setIsUserDropdownOpen(false);
                 setIsNotificationDropdownOpen(false);
             }
@@ -145,6 +151,21 @@ function HeaderPTBR() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Fechar search results ao clicar em um resultado
+    useEffect(() => {
+        const handleSearchResultClick = (event) => {
+            if (event.target.closest('.search-result-item')) {
+                setSearchQuery('');
+                clearResults();
+            }
+        };
+
+        document.addEventListener('click', handleSearchResultClick);
+        return () => {
+            document.removeEventListener('click', handleSearchResultClick);
+        };
+    }, [clearResults]);
 
     const userAvatar = userData?.avatar;
     const displayName = userData?.displayName;
