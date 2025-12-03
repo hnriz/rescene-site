@@ -1,10 +1,18 @@
 {
-  "buildCommand": "cd frontend && npm install && DISABLE_ESLINT_PLUGIN=true npm run build",
-  "outputDirectory": "frontend/build",
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "frontend/build/index.html"
     }
   ]
 }
