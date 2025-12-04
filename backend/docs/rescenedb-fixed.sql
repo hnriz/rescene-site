@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS rescene;
-USE rescene;
+CREATE DATABASE IF NOT EXISTS railway;
+USE railway;
 
 -- Tabela de usuários
 CREATE TABLE IF NOT EXISTS `user` (
@@ -207,18 +207,8 @@ CREATE TABLE IF NOT EXISTS `watched` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_watched` (`user_id`, `media_id`),
-  INDEX `fk_watched_user_idx` (`user_id` ASC),
-  INDEX `fk_watched_media_idx` (`media_id` ASC),
-  CONSTRAINT `fk_watched_user`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_watched_media`
-    FOREIGN KEY (`media_id`)
-    REFERENCES `media` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+  INDEX `idx_watched_user` (`user_id` ASC),
+  INDEX `idx_watched_media` (`media_id` ASC)
 ) ENGINE = InnoDB;
 
 -- Tabela de favoritos
@@ -226,18 +216,8 @@ CREATE TABLE IF NOT EXISTS `favorite` (
   `user_id` INT NOT NULL,
   `media_id` INT NOT NULL,
   PRIMARY KEY (`user_id`, `media_id`),
-  INDEX `fk_user_has_media_media1_idx` (`media_id` ASC),
-  INDEX `fk_user_has_media_user1_idx` (`user_id` ASC),
-  CONSTRAINT `fk_user_has_media_user1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `user` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_user_has_media_media1`
-    FOREIGN KEY (`media_id`)
-    REFERENCES `media` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION
+  INDEX `idx_favorite_media` (`media_id` ASC),
+  INDEX `idx_favorite_user` (`user_id` ASC)
 ) ENGINE = InnoDB;
 
 
