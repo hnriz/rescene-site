@@ -1,8 +1,5 @@
 {
   "version": 2,
-  "projectSettings": {
-    "sourceFilesOutsideRootDirectory": true
-  },
   "builds": [
     {
       "src": "frontend/package.json",
