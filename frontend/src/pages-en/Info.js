@@ -1,10 +1,10 @@
 import react, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import BackButton from '../components/BackButton';
 import Avatar from '../components-en/Avatar';
 import tmdbService from '../services/tmdbService';
 import reviewService from '../services/reviewService';
+import { api } from '../services/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -56,85 +56,12 @@ const Info = () => {
     const [textError, setTextError] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedSort, setSelectedSort] = useState('recent');
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [isWatched, setIsWatched] = useState(false);
     const MAX_REVIEW_LENGTH = 1000;
 
     // Function to show popup notification
-    const showPopupNotification = (message, type = 'info') => {
-        // Remove existing notification
-        const existingNotification = document.querySelector('.info-notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `info-notification info-notification-${type}`;
-        notification.innerHTML = `
-            <div className="info-notification-content">
-                <span>${message}</span>
-            </div>
-        `;
-
-        // Notification styles
-         notification.style.position = 'fixed';
-        notification.style.top = '95px';
-        notification.style.right = '20px';
-        // notification.style.transform = 'translateX(-50%)';
-        notification.style.zIndex = '1001';
-        notification.style.padding = '15px 30px';
-        notification.style.borderRadius = '8px';
-        notification.style.color = '#fff';
-        notification.style.fontWeight = '500';
-        notification.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-        notification.style.animation = 'slideInInfo 0.3s ease';
-
-        // Colors based on type
-        switch (type) {
-            case 'success':
-                notification.style.background = '#27ae60';
-                break;
-            case 'error':
-                notification.style.background = '#e74c3c';
-                break;
-            case 'warning':
-                notification.style.background = '#f39c12';
-                break;
-            default:
-                notification.style.background = '#3498db';
-        }
-
-        document.body.appendChild(notification);
-
-        // Add animation styles if they don't exist
-        if (!document.getElementById('info-notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'info-notification-styles';
-            style.textContent = `
-                @keyframes slideInInfo {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                
-                @keyframes slideOutInfo {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOutInfo 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
-            }
-        }, 5000);
-    };
+    
 
     // Function to show delete confirmation modal
     const showDeleteConfirmation = (reviewId) => {
@@ -339,7 +266,13 @@ const Info = () => {
             } catch (err) {
                 console.error('❌ Erro ao carregar detalhes:', err);
                 console.error('Erro completo:', err.response?.data || err.message);
-                setError('Failed to load media details: ' + err.message);
+                let errorMsg = 'Failed to load media details';
+                if (err.message && err.message.includes('Nenhuma review encontrada')) {
+                    errorMsg = 'This media is not available. No information found in TMDB or local database.';
+                } else {
+                    errorMsg = 'Failed to load media details: ' + err.message;
+                }
+                setError(errorMsg);
             } finally {
                 setLoading(false);
             }
@@ -354,6 +287,62 @@ const Info = () => {
             setLoading(false);
         }
     }, [movieId, type]);
+
+    // Carregar status de favorito quando media é carregada
+    useEffect(() => {
+        const checkIfFavorited = async () => {
+            if (!user || !movieId) return;
+            
+            try {
+                const response = await api.get(`/media/${movieId}/is-favorite`);
+                if (response.data.success) {
+                    console.log(`❤️ Verificando favorito: ${response.data.favorited}`);
+                    setIsFavorited(response.data.favorited);
+                }
+            } catch (error) {
+                console.error('Erro ao verificar favorito:', error);
+                setIsFavorited(false);
+            }
+        };
+
+        checkIfFavorited();
+    }, [movieId, user]);
+
+    // Check watched status when component mounts
+    useEffect(() => {
+        const checkIfWatched = async () => {
+            if (!movieId) return;
+            
+            // Primeiro, verificar localStorage
+            const localStorageValue = localStorage.getItem(`watched_${movieId}`);
+            if (localStorageValue === 'true') {
+                setIsWatched(true);
+                console.log(`👁️ Watched status loaded from localStorage: true`);
+            }
+            
+            // Depois, confirmar com o servidor se usuário estiver logado
+            if (!user) return;
+            
+            try {
+                const response = await api.get(`/media/${movieId}/is-watched`);
+                if (response.data.success) {
+                    console.log(`👁️ Checking watched from server: ${response.data.watched}`);
+                    setIsWatched(response.data.watched);
+                    // Sincronizar localStorage com servidor
+                    if (response.data.watched) {
+                        localStorage.setItem(`watched_${movieId}`, 'true');
+                    } else {
+                        localStorage.removeItem(`watched_${movieId}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking watched:', error);
+                // Se houver erro, manter o valor do localStorage
+            }
+        };
+
+        checkIfWatched();
+    }, [movieId, user]);
 
     // Carregar recomendações após carregar a mídia
     useEffect(() => {
@@ -523,6 +512,143 @@ const Info = () => {
         }
     };
 
+    // Handle favorite toggle
+    const handleFavoriteToggle = async () => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        // Validar se media foi carregado
+        if (!media) {
+            return;
+        }
+
+        try {
+            // Extract year from release_date
+            let year = null;
+            if (media.release_date) {
+                if (typeof media.release_date === 'string') {
+                    year = media.release_date.split('-')[0];
+                } else {
+                    year = new Date(media.release_date).getFullYear();
+                }
+            }
+            
+            // Format poster URL (avoid duplication)
+            let posterUrl = null;
+            if (media.poster_path) {
+                if (media.poster_path.startsWith('http')) {
+                    posterUrl = media.poster_path;
+                } else {
+                    posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+                }
+            }
+            
+            const response = await api.post(`/media/${movieId}/favorite`, {
+                title: media.title || media.name || 'Unknown',
+                year: year,
+                poster: posterUrl,
+                mediaType: isTV ? 'tv' : 'movie',
+                externalId: movieId
+            });
+
+            if (response.data.success) {
+                setIsFavorited(response.data.favorited);
+                // Disparar evento para atualizar favoritos em tempo real
+                window.dispatchEvent(new CustomEvent('favoriteAdded', { 
+                    detail: { 
+                        mediaId: movieId, 
+                        favorited: response.data.favorited 
+                    } 
+                }));
+                // Também disparar evento genérico para compatibilidade
+                window.dispatchEvent(new Event('favoriteRemoved'));
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    };
+
+    // Function to toggle watched
+    const handleWatchedToggle = async () => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        if (!media || !movieId) {
+            return;
+        }
+
+        try {
+            // Atualizar estado imediatamente (otimista)
+            const newWatchedState = !isWatched;
+            console.log(`👁️ Toggle watched: ${isWatched} → ${newWatchedState}`);
+            setIsWatched(newWatchedState);
+            
+            // Salvar no localStorage para persistir mesmo se a requisição falhar
+            const watchedKey = `watched_${movieId}`;
+            if (newWatchedState) {
+                localStorage.setItem(watchedKey, 'true');
+                console.log(`✅ Saved to localStorage: ${watchedKey} = true`);
+            } else {
+                localStorage.removeItem(watchedKey);
+                console.log(`❌ Removed from localStorage: ${watchedKey}`);
+            }
+
+            // Extract year from release_date
+            let year = null;
+            if (media.release_date) {
+                if (typeof media.release_date === 'string') {
+                    year = media.release_date.split('-')[0];
+                } else {
+                    year = new Date(media.release_date).getFullYear();
+                }
+            }
+            
+            // Format poster URL (avoid duplication)
+            let posterUrl = null;
+            if (media.poster_path) {
+                if (media.poster_path.startsWith('http')) {
+                    posterUrl = media.poster_path;
+                } else {
+                    posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+                }
+            }
+            
+            const response = await api.post(`/media/${movieId}/watched`, {
+                title: media.title || media.name || 'Unknown',
+                year: year,
+                poster: posterUrl,
+                mediaType: isTV ? 'tv' : 'movie',
+                externalId: movieId
+            });
+
+            if (response.data.success) {
+                // Confirmar estado com resposta do servidor
+                setIsWatched(response.data.watched);
+                if (response.data.watched) {
+                    localStorage.setItem(`watched_${movieId}`, 'true');
+                } else {
+                    localStorage.removeItem(`watched_${movieId}`);
+                }
+                // Disparar evento para atualizar em tempo real
+                window.dispatchEvent(new CustomEvent('watchedToggled', { 
+                    detail: { 
+                        mediaId: movieId, 
+                        watched: response.data.watched 
+                    } 
+                }));
+            }
+        } catch (error) {
+            console.error('Error updating watched:', error);
+            // Reverter estado em caso de erro
+            setIsWatched(!isWatched);
+            localStorage.removeItem(`watched_${movieId}`);
+        }
+    };
+
     // Submit review
     const handleSubmitReview = async (e) => {
         e.preventDefault();
@@ -543,7 +669,6 @@ const Info = () => {
 
         if (userReview.text.trim().length === 0) {
             setTextError(true);
-            toast.warning('Please write a review');
             return;
         }
 
@@ -602,7 +727,6 @@ const Info = () => {
     // Handle like/unlike
     const handleLikeReview = async (reviewId, isCurrentlyLiked) => {
         if (!user) {
-            showPopupNotification('Please login to like a review', 'info');
             return;
         }
 
@@ -794,6 +918,22 @@ const Info = () => {
     return (
         <>
             <BackButton />
+            {error && (
+                <div className="error-message-container">
+                    <div className="error-message">
+                        <h2>⚠️ Error Loading Media</h2>
+                        <p>{error}</p>
+                        <button onClick={() => window.history.back()} className="back-btn">
+                            Go Back
+                        </button>
+                    </div>
+                </div>
+            )}
+            {loading ? (
+                <div className="loading-message-container">
+                    <div className="loading-spinner">Loading...</div>
+                </div>
+            ) : (
             <main className="movie-info-page">
                 {/* <!-- Hero Section com Banner do Filme --> */}
                 <section className="movie-hero">
@@ -838,18 +978,26 @@ const Info = () => {
                                 </div>
 
                                 <div className="movie-actions">
-                                    <button className="action-btn-info watched" data-action="watched">
+                                    <button 
+                                        className={`action-btn-info watched ${isWatched ? 'active' : ''}`}
+                                        data-action="watched"
+                                        onClick={handleWatchedToggle}
+                                    >
                                         <FontAwesomeIcon icon={faEye} />
                                         <span>Watched</span>
                                     </button>
-                                    <button className="action-btn-info like" data-action="like">
+                                    <button 
+                                        className={`action-btn-info like ${isFavorited ? 'active' : ''}`} 
+                                        data-action="like"
+                                        onClick={handleFavoriteToggle}
+                                    >
                                         <FontAwesomeIcon icon={faHeart} />
                                         <span>Like</span>
                                     </button>
-                                    <button className="action-btn-info add-list" data-action="addToList">
+                                    {/* <button className="action-btn-info add-list" data-action="addToList">
                                         <FontAwesomeIcon icon={faPlus} />
                                         <span>Add to List</span>
-                                    </button>
+                                    </button> */}
                                 </div>
 
                                 <div className="movie-description">
@@ -1242,6 +1390,7 @@ const Info = () => {
                     </div>
                 </section>
             </main>
+            )}
         </>
     );
 };

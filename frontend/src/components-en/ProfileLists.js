@@ -47,7 +47,7 @@ function ProfileLists({ userId, isOwnProfile }) {
 
         // Se é o perfil do próprio usuário, usar /api/lists
         // Se é outro usuário, usar /api/user/:userId/lists
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const API_URL = process.env.REACT_APP_API_URL || 'https://rescene-site.vercel.app/api';
         const endpoint = isOwnProfile 
           ? `${API_URL}/lists`
           : `${API_URL}/user/${userId}/lists`;
@@ -81,7 +81,7 @@ function ProfileLists({ userId, isOwnProfile }) {
 
       try {
         const token = localStorage.getItem('token');
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const API_URL = process.env.REACT_APP_API_URL || 'https://rescene-site.vercel.app/api';
         const response = await fetch(`${API_URL}/user/saved-lists`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });

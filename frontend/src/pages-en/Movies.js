@@ -169,7 +169,6 @@ function Movies() {
     }, [searchQuery]);
 
     const handleMovieClick = (movieId) => {
-        console.log('🎬 Clicked on movie:', movieId);
         navigate(`/info/movie/${movieId}`);
     };
 

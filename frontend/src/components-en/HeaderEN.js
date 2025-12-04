@@ -34,6 +34,7 @@ function HeaderEN() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [placeholderText, setPlaceholderText] = useState('');
+    const [showSearchResults, setShowSearchResults] = useState(false);
     
     const searchInputRef = useRef(null);
     const searchTerms = [
@@ -93,7 +94,27 @@ function HeaderEN() {
     const handleSearchInputChange = (e) => {
         const query = e.target.value;
         setSearchQuery(query);
+        setShowSearchResults(true);
         handleSearchInput(query);
+    };
+
+    // Handler para Enter e clique do botão de busca
+    const handleSearchSubmit = (e) => {
+        if (e) {
+            e.preventDefault();
+        }
+        if (searchQuery.trim().length > 0) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery('');
+            setShowSearchResults(false);
+            clearResults();
+        }
+    };
+
+    const handleSearchKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearchSubmit(e);
+        }
     };
 
     // Toggle dropdowns
@@ -135,10 +156,10 @@ function HeaderEN() {
         const handleClickOutside = (event) => {
             if (
                 !event.target.closest('.user-dropdown') &&
-                !event.target.closest('.search-container') &&
-                !event.target.closest('.search-results')
+                !event.target.closest('.search-container')
             ) {
                 setIsUserDropdownOpen(false);
+                setShowSearchResults(false);
                 // setIsNotificationDropdownOpen(false);
             }
         };
@@ -205,14 +226,19 @@ function HeaderEN() {
                             autoComplete="off"
                             value={searchQuery}
                             onChange={handleSearchInputChange}
+                            onKeyPress={handleSearchKeyPress}
                         />
-                        <button type="submit" className="search-btn-header">
+                        <button 
+                            type="submit" 
+                            className="search-btn-header"
+                            onClick={handleSearchSubmit}
+                        >
                             <FontAwesomeIcon icon={faSearch} />
                         </button>
                         <div 
                             className="search-results" 
                             id="search-results"
-                            style={{ display: searchResults.length > 0 || isLoading ? 'block' : 'none' }}
+                            style={{ display: showSearchResults && (searchResults.length > 0 || isLoading) ? 'block' : 'none' }}
                         >
                             {isLoading && (
                                 <div className="search-loading">

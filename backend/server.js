@@ -72,19 +72,7 @@ const initializeDatabase = async () => {
     try {
         const connection = await conn.getConnection();
         
-        // Adicionar coluna created_at se não existir
-        await connection.execute(`
-            ALTER TABLE user ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        `).catch(() => {
-            // Coluna já existe, ignorar erro
-        });
-
-        // Adicionar coluna bio se não existir
-        await connection.execute(`
-            ALTER TABLE user ADD COLUMN IF NOT EXISTS bio VARCHAR(250)
-        `).catch(() => {
-            // Coluna já existe, ignorar erro
-        });
+        console.log('✅ Banco de dados conectado com sucesso');
         
         connection.release();
         console.log('✅ Banco de dados inicializado com sucesso');
@@ -130,7 +118,7 @@ const auth = async (req, res, next) => {
     
     if (!token) {
         console.error('❌ No token provided');
-        return next(createError(401, 'Nenhum token fornecido'));
+        return res.status(401).json({ success: false, message: 'Nenhum token fornecido' });
     }
 
     try {
@@ -140,7 +128,7 @@ const auth = async (req, res, next) => {
         next();
     } catch (err) {
         console.error('❌ Token verification failed:', err.message);
-        next(createError(401, 'Token inválido'));
+        return res.status(401).json({ success: false, message: 'Token inválido' });
     }
 };
 
@@ -253,7 +241,8 @@ app.post('/api/login', async (req, res, next) => {
                 email: row.email,
                 displayName: row['display-name'] || row.username,
                 bio: row.bio || '',
-                avatar: row.avatar ? `data:image/png;base64,${row.avatar.toString('base64')}` : null
+                avatar: row.avatar ? `data:image/png;base64,${row.avatar.toString('base64')}` : null,
+                preferredLanguage: row.language ? (row.language.toLowerCase() === 'pt-br' ? 'pt-br' : 'en') : 'en'
             }
         });
     } catch (err) {
@@ -333,7 +322,8 @@ app.post('/api/register', async (req, res, next) => {
                 email,
                 displayName: displayName || username,
                 bio: '',
-                avatar: null
+                avatar: null,
+                preferredLanguage: 'en'
             }
         });
     } catch (err) {
@@ -375,6 +365,11 @@ app.get('/api/user/profile', auth, async (req, res, next) => {
             user.avatar = `data:image/png;base64,${user.avatar.toString('base64')}`;
         }
 
+        // Mapear language para preferredLanguage
+        if (user.language) {
+            user.preferredLanguage = user.language.toLowerCase() === 'pt-br' ? 'pt-br' : 'en';
+        }
+
         res.json(user);
     } catch (err) {
         next(err);
@@ -383,11 +378,11 @@ app.get('/api/user/profile', auth, async (req, res, next) => {
 
 // Atualizar perfil do usuário
 app.put('/api/user/profile', auth, async (req, res, next) => {
-    const { displayName, bio, avatar, username } = req.body;
+    const { displayName, bio, avatar, username, preferredLanguage } = req.body;
 
     try {
         // Validar entrada
-        if (!displayName && !bio && !avatar && !username) {
+        if (!displayName && !bio && !avatar && !username && !preferredLanguage) {
             throw createError(400, 'Nenhum campo para atualizar foi fornecido');
         }
 
@@ -422,6 +417,10 @@ app.put('/api/user/profile', auth, async (req, res, next) => {
         if (avatar !== undefined) {
             fields.push('avatar = ?');
             params.push(avatar || null);
+        }
+        if (preferredLanguage) {
+            fields.push('language = ?');
+            params.push(preferredLanguage);
         }
 
         updateQuery += fields.join(', ') + ' WHERE id = ?';
@@ -1374,7 +1373,338 @@ app.delete('/api/user/:userId/follow', auth, async (req, res, next) => {
     }
 });
 
-// Rota para obter perfil público de um usuário (deve ser depois de /api/user/:userId/reviews para não interceptar)
+// Rota para obter favoritos do usuário autenticado
+app.get('/api/user/favorites', auth, async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        console.log(`📥 Buscando favoritos do usuário ${userId}...`);
+
+        const [favorites] = await conn.execute(`
+            SELECT m.id, m.name as title, m.\`released-at\` as year, m.type as mediaType, m.poster_path, m.rating, m.overview
+            FROM favorite f
+            JOIN media m ON f.media_id = m.id
+            WHERE f.user_id = ?
+            ORDER BY m.name ASC
+        `, [userId]);
+
+        console.log(`✅ Favoritos encontrados: ${favorites ? favorites.length : 0}`);
+
+        // Transformar os dados para o formato esperado pelo frontend
+        const formattedFavorites = (favorites || []).map((fav, idx) => {
+            let posterUrl = fav.poster_path;
+            
+            // Se não tem poster_path, usar placeholder
+            if (!posterUrl) {
+                posterUrl = 'https://image.tmdb.org/t/p/w500/null';
+                console.log(`⚠️ Favorito ${idx + 1} (${fav.title}): sem poster_path, usando placeholder`);
+            } else {
+                console.log(`📸 Favorito ${idx + 1} (${fav.title}): poster_path = ${posterUrl.substring(0, 50)}...`);
+            }
+            
+            return {
+                id: fav.id,
+                type: fav.mediaType === 1 ? 'tv' : 'movie',
+                title: fav.title || 'Unknown',
+                year: fav.year ? new Date(fav.year).getFullYear() : null,
+                duration: null,
+                rating: fav.rating || null,
+                poster: posterUrl,
+                overview: fav.overview,
+                externalId: fav.id,
+                mediaType: fav.mediaType === 1 ? 'tv' : 'movie',
+                media_type: fav.mediaType === 1 ? 'tv' : 'movie',
+                poster_path: posterUrl,
+                tmdb_id: fav.id
+            };
+        });
+
+        res.json({
+            success: true,
+            favorites: formattedFavorites
+        });
+    } catch (err) {
+        console.error('❌ Get favorites error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Rota pública para obter favoritos de qualquer usuário
+app.get('/api/user/:userId/favorites', async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        console.log(`📥 Buscando favoritos públicos do usuário ${userId}...`);
+
+        const [favorites] = await conn.execute(`
+            SELECT m.id, m.name as title, m.\`released-at\` as year, m.type as mediaType, m.poster_path, m.rating, m.overview
+            FROM favorite f
+            JOIN media m ON f.media_id = m.id
+            WHERE f.user_id = ?
+            ORDER BY m.name ASC
+        `, [userId]);
+
+        console.log(`✅ Favoritos públicos encontrados: ${favorites ? favorites.length : 0}`);
+
+        // Transformar os dados para o formato esperado pelo frontend
+        const formattedFavorites = (favorites || []).map((fav, idx) => {
+            let posterUrl = fav.poster_path;
+            
+            // Se não tem poster_path, usar placeholder
+            if (!posterUrl) {
+                posterUrl = 'https://image.tmdb.org/t/p/w500/null';
+            }
+            
+            console.log(`🎬 Favorite ${idx}: id=${fav.id}, title=${fav.title}, mediaType=${fav.mediaType}, posterUrl=${posterUrl}`);
+            
+            return {
+                id: fav.id,
+                type: fav.mediaType === 1 ? 'tv' : 'movie',
+                title: fav.title || 'Unknown',
+                year: fav.year ? new Date(fav.year).getFullYear() : null,
+                duration: null,
+                rating: fav.rating || null,
+                poster: posterUrl,
+                overview: fav.overview,
+                externalId: fav.id,
+                mediaType: fav.mediaType === 1 ? 'tv' : 'movie',
+                media_type: fav.mediaType === 1 ? 'tv' : 'movie',
+                poster_path: posterUrl,
+                tmdb_id: fav.id
+            };
+        });
+
+        res.json({
+            success: true,
+            favorites: formattedFavorites
+        });
+    } catch (err) {
+        console.error('❌ Get public favorites error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Verificar se uma mídia está nos favoritos
+app.get('/api/media/:mediaId/is-favorite', auth, async (req, res, next) => {
+    try {
+        const { mediaId } = req.params;
+        const userId = req.user.id;
+
+        const [result] = await conn.execute(
+            'SELECT * FROM favorite WHERE user_id = ? AND media_id = ?',
+            [userId, mediaId]
+        );
+
+        res.json({
+            success: true,
+            favorited: result.length > 0
+        });
+    } catch (err) {
+        console.error('Check favorite error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ===== WATCHED ENDPOINTS =====
+
+// GET /api/user/watched - Obter filmes/séries marcadas como assistidas pelo usuário logado
+app.get('/api/user/watched', auth, async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        console.log(`📺 Buscando assistidos do usuário ${userId}...`);
+
+        const [watched] = await conn.execute(`
+            SELECT m.id, m.name as title, m.\`released-at\` as year, m.type as mediaType, m.poster_path, m.rating, m.overview
+            FROM watched w
+            JOIN media m ON w.media_id = m.id
+            WHERE w.user_id = ?
+            ORDER BY m.name ASC
+        `, [userId]);
+
+        console.log(`✅ Assistidos encontrados: ${watched ? watched.length : 0}`);
+
+        // Transformar os dados para o formato esperado pelo frontend
+        const formattedWatched = (watched || []).map((item, idx) => {
+            let posterUrl = item.poster_path;
+            
+            if (!posterUrl) {
+                posterUrl = 'https://image.tmdb.org/t/p/w500/null';
+                console.log(`⚠️ Assistido ${idx + 1} (${item.title}): sem poster_path, usando placeholder`);
+            } else {
+                console.log(`📸 Assistido ${idx + 1} (${item.title}): poster_path = ${posterUrl.substring(0, 50)}...`);
+            }
+            
+            return {
+                id: item.id,
+                type: item.mediaType === 1 ? 'tv' : 'movie',
+                title: item.title || 'Unknown',
+                year: item.year ? new Date(item.year).getFullYear() : null,
+                duration: null,
+                rating: item.rating || null,
+                poster: posterUrl,
+                overview: item.overview,
+                externalId: item.id,
+                mediaType: item.mediaType === 1 ? 'tv' : 'movie',
+                media_type: item.mediaType === 1 ? 'tv' : 'movie',
+                poster_path: posterUrl,
+                tmdb_id: item.id
+            };
+        });
+
+        res.json({
+            success: true,
+            watched: formattedWatched
+        });
+    } catch (err) {
+        console.error('❌ Get watched error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// GET /api/media/:mediaId/is-watched - Verificar se usuário marcou como assistido
+app.get('/api/media/:mediaId/is-watched', auth, async (req, res, next) => {
+    try {
+        const { mediaId } = req.params;
+        const userId = req.user.id;
+
+        const [result] = await conn.execute(
+            'SELECT * FROM watched WHERE user_id = ? AND media_id = ?',
+            [userId, mediaId]
+        );
+
+        res.json({
+            success: true,
+            watched: result.length > 0
+        });
+    } catch (err) {
+        console.error('Check watched error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// POST /api/media/:mediaId/watched - Adicionar ou remover filme/série dos assistidos (toggle)
+app.post('/api/media/:mediaId/watched', auth, async (req, res, next) => {
+    try {
+        const { mediaId } = req.params;
+        const userId = req.user.id;
+        const { title, year, poster, mediaType, externalId } = req.body;
+
+        console.log(`📺 Adicionando assistido - ID: ${mediaId}, Title: ${title}, Year: ${year}, Type: ${mediaType}`);
+
+        // Verificar se já existe nos assistidos
+        const [existingWatched] = await conn.execute(
+            'SELECT * FROM watched WHERE user_id = ? AND media_id = ?',
+            [userId, mediaId]
+        );
+
+        if (existingWatched.length > 0) {
+            // Já está nos assistidos, remover
+            console.log(`👁️ Removendo assistido ${mediaId} do usuário ${userId}`);
+            await conn.execute(
+                'DELETE FROM watched WHERE user_id = ? AND media_id = ?',
+                [userId, mediaId]
+            );
+
+            res.json({ 
+                success: true, 
+                watched: false,
+                message: 'Removido dos assistidos'
+            });
+        } else {
+            // Não está nos assistidos, adicionar
+            // Primeiro, garantir que existe na tabela media com todos os dados
+            try {
+                console.log(`📝 Inserindo/Atualizando media com ID: ${mediaId}, Name: ${title || 'Unknown'}, Poster: ${poster ? 'sim' : 'não'}`);
+                await conn.execute(
+                    'INSERT INTO media (id, name, type, `released-at`, poster_path) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), poster_path=VALUES(poster_path)',
+                    [
+                        mediaId, 
+                        title || 'Unknown',
+                        mediaType === 'tv' ? 1 : 0,
+                        year ? `${year}-01-01` : null,
+                        poster || null
+                    ]
+                );
+                console.log(`✅ Media inserida/atualizada com sucesso`);
+            } catch (mediaErr) {
+                console.error('❌ Error inserting into media:', mediaErr.message);
+                // Continuar mesmo se falhar (media pode já existir)
+            }
+
+            // Adicionar aos assistidos
+            await conn.execute(
+                'INSERT INTO watched (user_id, media_id) VALUES (?, ?)',
+                [userId, mediaId]
+            );
+            console.log(`👁️ Assistido adicionado para usuário ${userId}`);
+
+            res.json({ 
+                success: true, 
+                watched: true,
+                message: 'Adicionado aos assistidos'
+            });
+        }
+    } catch (err) {
+        console.error('❌ Watched error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// GET /api/user/:userId/watched - Obter filmes/séries marcadas como assistidas de um usuário (público)
+app.get('/api/user/:userId/watched', async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        console.log(`📺 Buscando assistidos públicos do usuário ${userId}...`);
+
+        const [watched] = await conn.execute(`
+            SELECT m.id, m.name as title, m.\`released-at\` as year, m.type as mediaType, m.poster_path, m.rating, m.overview
+            FROM watched w
+            JOIN media m ON w.media_id = m.id
+            WHERE w.user_id = ?
+            ORDER BY m.name ASC
+        `, [userId]);
+
+        console.log(`✅ Assistidos encontrados: ${watched ? watched.length : 0}`);
+
+        // Transformar os dados para o formato esperado pelo frontend
+        const formattedWatched = (watched || []).map((item, idx) => {
+            let posterUrl = item.poster_path;
+            
+            if (!posterUrl) {
+                posterUrl = 'https://image.tmdb.org/t/p/w500/null';
+            }
+            
+            return {
+                id: item.id,
+                type: item.mediaType === 1 ? 'tv' : 'movie',
+                title: item.title || 'Unknown',
+                year: item.year ? new Date(item.year).getFullYear() : null,
+                duration: null,
+                rating: item.rating || null,
+                poster: posterUrl,
+                overview: item.overview,
+                externalId: item.id,
+                mediaType: item.mediaType === 1 ? 'tv' : 'movie',
+                media_type: item.mediaType === 1 ? 'tv' : 'movie',
+                poster_path: posterUrl,
+                tmdb_id: item.id
+            };
+        });
+
+        res.json({
+            success: true,
+            watched: formattedWatched
+        });
+    } catch (err) {
+        console.error('❌ Get public watched error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ===== END WATCHED ENDPOINTS =====
+
 app.get('/api/user/:userId', async (req, res, next) => {
     try {
         const { userId } = req.params;
@@ -2094,7 +2424,7 @@ app.get('/api/search', async (req, res, next) => {
             return res.json({ results: [], error: 'API não configurada' });
         }
 
-        console.log(`🔍 Buscando na TMDB (${lang}): "${q}"`);
+        console.log(`🔍 Buscando (${lang}): "${q}"`);
 
         // Buscar em TMDB (multi search retorna filmes e séries)
         const tmdbResponse = await fetch(
@@ -2109,7 +2439,7 @@ app.get('/api/search', async (req, res, next) => {
         console.log(`📺 TMDB retornou: ${tmdbData.results?.length || 0} resultados`);
 
         // Filtrar apenas filmes e séries (remover pessoas)
-        const results = (tmdbData.results || [])
+        const tmdbResults = (tmdbData.results || [])
             .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
             .slice(0, 20)
             .map(item => {
@@ -2136,7 +2466,35 @@ app.get('/api/search', async (req, res, next) => {
                 };
             });
 
-        console.log(`✅ Formatados ${results.length} resultados`);
+        // Buscar usuários no banco de dados
+        let userResults = [];
+        try {
+            const [results] = await conn.execute(
+                'SELECT id, username, `display-name` as displayName, avatar FROM user WHERE username LIKE ? OR `display-name` LIKE ? LIMIT 10',
+                [`%${q}%`, `%${q}%`]
+            );
+            userResults = results || [];
+            console.log(`📝 Query SQL retornou: ${JSON.stringify(results)}`);
+        } catch (dbError) {
+            console.error(`❌ Erro ao buscar usuários no BD: ${dbError.message}`);
+            userResults = [];
+        }
+
+        const formattedUserResults = userResults.map(user => ({
+            id: `user_${user.id}`,
+            title: user.displayName || user.username,
+            username: user.username,
+            type: 'User',
+            poster: user.avatar ? `data:image/png;base64,${user.avatar.toString('base64')}` : null,
+            description: `@${user.username}`,
+            userId: user.id
+        }));
+
+        console.log(`👥 Usuários encontrados: ${formattedUserResults.length}`);
+        console.log(`✅ Total: ${tmdbResults.length + formattedUserResults.length} resultados`);
+
+        // Combinar resultados (filmes/séries primeiro, depois usuários)
+        const results = [...tmdbResults, ...formattedUserResults];
 
         res.json({ 
             success: true, 
@@ -2147,6 +2505,80 @@ app.get('/api/search', async (req, res, next) => {
         res.json({ success: false, results: [], message: err.message });
     }
 });
+
+// ==========================
+// 🎬 ROTAS DE FAVORITOS
+// ==========================
+
+// Adicionar ou remover filme/série dos favoritos (toggle)
+app.post('/api/media/:mediaId/favorite', auth, async (req, res, next) => {
+    try {
+        const { mediaId } = req.params;
+        const userId = req.user.id;
+        const { title, year, poster, mediaType, externalId } = req.body;
+
+        console.log(`🎬 Adicionando favorito - ID: ${mediaId}, Title: ${title}, Year: ${year}, Type: ${mediaType}`);
+
+        // Verificar se já existe nos favoritos
+        const [existingFavorite] = await conn.execute(
+            'SELECT * FROM favorite WHERE user_id = ? AND media_id = ?',
+            [userId, mediaId]
+        );
+
+        if (existingFavorite.length > 0) {
+            // Já está nos favoritos, remover
+            console.log(`❤️ Removendo favorito ${mediaId} do usuário ${userId}`);
+            await conn.execute(
+                'DELETE FROM favorite WHERE user_id = ? AND media_id = ?',
+                [userId, mediaId]
+            );
+
+            res.json({ 
+                success: true, 
+                favorited: false,
+                message: 'Removido dos favoritos'
+            });
+        } else {
+            // Não está nos favoritos, adicionar
+            // Primeiro, garantir que existe na tabela media com todos os dados
+            try {
+                console.log(`📝 Inserindo/Atualizando media com ID: ${mediaId}, Name: ${title || 'Unknown'}, Poster: ${poster ? 'sim' : 'não'}`);
+                await conn.execute(
+                    'INSERT INTO media (id, name, type, `released-at`, poster_path) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), poster_path=VALUES(poster_path)',
+                    [
+                        mediaId, 
+                        title || 'Unknown',
+                        mediaType === 'tv' ? 1 : 0,
+                        year ? `${year}-01-01` : null,
+                        poster || null
+                    ]
+                );
+                console.log(`✅ Media inserida/atualizada com sucesso`);
+            } catch (mediaErr) {
+                console.error('❌ Error inserting into media:', mediaErr.message);
+                // Continuar mesmo se falhar (media pode já existir)
+            }
+
+            // Adicionar aos favoritos
+            await conn.execute(
+                'INSERT INTO favorite (user_id, media_id) VALUES (?, ?)',
+                [userId, mediaId]
+            );
+            console.log(`❤️ Favorito adicionado para usuário ${userId}`);
+
+            res.json({ 
+                success: true, 
+                favorited: true,
+                message: 'Adicionado aos favoritos'
+            });
+        }
+    } catch (err) {
+        console.error('❌ Favorite error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

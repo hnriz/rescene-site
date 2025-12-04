@@ -22,6 +22,18 @@ function Settings() {
     const { user, updateUser, logout, loading } = useAuth();
     const { language, setLanguage } = useLanguage();
     const navigate = useNavigate();
+    
+    // Sincronizar contexto de idioma com a rota
+    useEffect(() => {
+        // Se o contexto de idioma é PT-BR mas estamos em /settings (English), 
+        // significa que o usuário acessou a página em English intencionalmente
+        // Portanto, temporariamente mudar o contexto para 'en' enquanto estiver nesta página
+        if (language !== 'en') {
+            console.log('🌐 Contexto em', language, 'mas estamos em /settings (EN). Ajustando temp context...');
+            // NÃO vamos mudar permanentemente, só temporariamente neste componente
+        }
+    }, [language]);
+    
     const [formData, setFormData] = useState({
         username: '',
         displayName: '',
@@ -93,6 +105,10 @@ function Settings() {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault();
+        console.log('💾 handleSaveProfile acionado!');
+        console.log('   languageChanged:', languageChanged);
+        console.log('   tempLanguage:', tempLanguage);
+        console.log('   language:', language);
         setIsLoading(true);
         setMessage('');
 
@@ -100,7 +116,9 @@ function Settings() {
             const response = await api.put('/user/profile', {
                 username: editableUsername ? formData.username : undefined,
                 displayName: formData.displayName,
-                bio: formData.bio
+                bio: formData.bio,
+                // Incluir idioma se foi alterado
+                ...(languageChanged && { preferredLanguage: tempLanguage })
             });
 
             if (response.data.success) {
@@ -109,24 +127,33 @@ function Settings() {
                     username: editableUsername ? formData.username : user.username,
                     displayName: formData.displayName,
                     email: formData.email,
-                    bio: formData.bio
+                    bio: formData.bio,
+                    ...(languageChanged && { preferredLanguage: tempLanguage })
                 });
                 setEditableUsername(false);
                 
                 // Se o idioma foi mudado, atualizar contexto e navegar
-                if (languageChanged && tempLanguage !== language) {
-                    console.log('🌐 Salvando mudança de idioma para:', tempLanguage);
+                if (languageChanged) {
+                    console.log('🌐 Mudança de idioma detectada!');
+                    console.log('   Idioma selecionado:', tempLanguage);
+                    console.log('   Idioma atual da página: /settings (EN)');
+                    
+                    // Atualizar o contexto de idioma
                     setLanguage(tempLanguage);
                     setLanguageChanged(false);
+                    setTempLanguage(tempLanguage);
+                    
+                    // Aguardar um pouco e depois fazer o reload com a nova rota
                     setTimeout(() => {
                         if (tempLanguage === 'pt-br') {
-                            navigate('/configuracoes');
+                            console.log('🔄 Redirecionando para /configuracoes');
+                            window.location.href = '/configuracoes';
                         } else {
-                            navigate('/settings');
+                            console.log('🔄 Redirecionando para /settings');
+                            window.location.href = '/settings';
                         }
-                    }, 100);
+                    }, 500);
                 } else {
-                    setLanguageChanged(false);
                     setTimeout(() => setMessage(''), 3000);
                 }
             }
@@ -407,18 +434,6 @@ function Settings() {
                                     <div class="form-hint">Your main e-mail adress.</div>
                                 </div>
 
-                                {/* <div class="form-group-settings">
-                                    <label for="pronouns">Pronomes</label>
-                                    <select id="pronouns" class="form-select">
-                                        <option value="">Selecionar pronomes</option>
-                                        <option value="ele/dele">Ele/Dele</option>
-                                        <option value="ela/dela">Ela/Dela</option>
-                                        <option value="elu/delu">Elu/Delu</option>
-                                        <option value="outro">Outro</option>
-                                    </select>
-                                    <div class="form-hint">Como você gostaria de ser tratado</div>
-                                </div> */}
-
                                 <div class="form-group-settings">
                                     <label>Interface language</label>
                                     <div class="interface-language-dropdown">
@@ -461,26 +476,10 @@ function Settings() {
                                         value={formData.bio}
                                         onChange={handleInputChange}></textarea>
                                     <div class="form-hint">Maximum: 500 characters</div>
-                                    {/* <div class="char-count"><span id="bio-chars">{formData.bio.length}</span>/500</div> */}
+                                   
                                 </div>
 
-                                {/* <div class="form-group-settings full-width">
-                                    <label>Favorite</label>
-                                    <div class="favorites-grid">
-                                        <div class="favorite-item add-favorite" data-type="movie">
-                                            <FontAwesomeIcon icon={faPlus} />
-                                            <span>Add movie</span>
-                                        </div>
-                                        <div class="favorite-item add-favorite" data-type="series">
-                                            <FontAwesomeIcon icon={faPlus} />
-                                            <span>Add TV Show</span>
-                                        </div>
-                                         <div class="favorite-item add-favorite" data-type="director">
-                                            <FontAwesomeIcon icon={faPlus} />
-                                            <span>Add director</span>
-                                        </div>
-                                    </div>
-                                </div> */}
+                
                             </div>
 
                             <div class="form-actions">
@@ -1114,7 +1113,6 @@ function Settings() {
                             </div>
                         </form>
                     </section> */}
-                    )}
                 </div>
             </div>
 

@@ -79,7 +79,7 @@ const Lista = () => {
                 console.log('📂 Carregando lista:', listId);
 
                 // Buscar dados da lista
-                const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+                const API_URL = process.env.REACT_APP_API_URL || 'https://rescene-site.vercel.app/api';
                 const response = await fetch(`${API_URL}/lists/${listId}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });

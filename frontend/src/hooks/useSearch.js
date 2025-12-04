@@ -28,28 +28,54 @@ export const useSearch = () => {
       // Processar resultados da API
       if (response.data.results && Array.isArray(response.data.results)) {
         response.data.results.forEach(item => {
-          // Determinar o tipo e link baseado no media_type
+          // Limitar a 4 resultados
+          if (results.length >= 4) return;
+          
+          // Determinar o tipo e link baseado no media_type ou tipo de usuario
           let link = '';
           let type = '';
-
-          if (item.mediaType === 'movie') {
-            link = `/filme/${item.externalId}`;
-            type = 'Filme';
-          } else if (item.mediaType === 'tv') {
-            link = `/serie/${item.externalId}`;
-            type = 'Série';
-          }
-
-          if (link) {
+          let mediaType = '';
+          
+          if (item.type === 'User') {
+            // É um usuário
+            const baseRoute = language === 'en' ? '/user' : '/usuario';
+            link = `${baseRoute}/${item.username}`;
+            type = language === 'en' ? 'User' : 'Usuário';
+            
             results.push({
               id: item.id,
               type: type,
               title: item.title,
-              year: item.year,
+              username: item.username,
               image: item.poster,
-              link: link,
-              rating: item.rating
+              link: link
             });
+          } else {
+            // É filme ou série
+            const baseRoute = language === 'en' ? '/info' : '/info-ptbr';
+
+            if (item.mediaType === 'movie') {
+              mediaType = 'movie';
+              link = `${baseRoute}/movie/${item.externalId}`;
+              type = language === 'en' ? 'Movie' : 'Filme';
+            } else if (item.mediaType === 'tv') {
+              mediaType = 'tv';
+              link = `${baseRoute}/tv/${item.externalId}`;
+              type = language === 'en' ? 'TV Show' : 'Série';
+            }
+
+            if (link) {
+              results.push({
+                id: item.id,
+                type: type,
+                title: item.title,
+                year: item.year,
+                image: item.poster,
+                link: link,
+                rating: item.rating,
+                mediaType: mediaType
+              });
+            }
           }
         });
       }

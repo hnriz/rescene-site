@@ -165,7 +165,6 @@ function CatalogoFilmes() {
     }, [searchQuery]);
 
     const handleMovieClick = (movieId) => {
-        console.log('🎬 Clicou no filme:', movieId);
         navigate(`/info-ptbr/movie/${movieId}`);
     };
 

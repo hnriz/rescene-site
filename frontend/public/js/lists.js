@@ -252,7 +252,7 @@ window.initLists = function() {
                 }
                 
                 // Fazer chamada à API
-                const API_URL = window.API_URL || 'http://localhost:3001/api';
+                const API_URL = window.API_URL || 'https://rescene-site.vercel.app/api';
                 const response = await fetch(`${API_URL}/lists`, {
                     method: 'POST',
                     headers: {
@@ -517,7 +517,7 @@ window.initLists = function() {
                 toast.loading('Deletando lista...');
             }
             
-            const API_URL = window.API_URL || 'http://localhost:3001/api';
+            const API_URL = window.API_URL || 'https://rescene-site.vercel.app/api';
             const response = await fetch(`${API_URL}/lists/${listId}`, {
                 method: 'DELETE',
                 headers: {

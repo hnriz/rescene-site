@@ -8,16 +8,21 @@ export const LanguageProvider = ({ children }) => {
 
   // Carregar idioma salvo ou do navegador
   useEffect(() => {
+    // Carregar do localStorage primeiro
     const savedLanguage = localStorage.getItem('userLanguage');
     if (savedLanguage) {
+      console.log('🌐 Carregando idioma do localStorage:', savedLanguage);
       setLanguageState(savedLanguage);
-    } else {
-      // Detectar idioma do navegador
-      const browserLang = navigator.language.toLowerCase();
-      const detectedLang = browserLang.startsWith('pt') ? 'pt-br' : 'en';
-      setLanguageState(detectedLang);
-      localStorage.setItem('userLanguage', detectedLang);
+      setLoading(false);
+      return;
     }
+
+    // Detectar idioma do navegador
+    const browserLang = navigator.language.toLowerCase();
+    const detectedLang = browserLang.startsWith('pt') ? 'pt-br' : 'en';
+    console.log('🌐 Idioma detectado do navegador:', detectedLang);
+    setLanguageState(detectedLang);
+    localStorage.setItem('userLanguage', detectedLang);
     setLoading(false);
   }, []);
 

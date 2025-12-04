@@ -1,12 +1,12 @@
 import react, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import BackButtonPTBR from '../componentes-ptbr/BackButtonPTBR';
 import AvatarPTBR from '../componentes-ptbr/AvatarPTBR';
 import tmdbService from '../services/tmdbService';
 import reviewService from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { api } from '../services/axiosConfig';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -58,84 +58,142 @@ const InfoPTBR = () => {
     const [textError, setTextError] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedSort, setSelectedSort] = useState('recent');
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [isWatched, setIsWatched] = useState(false);
     const MAX_REVIEW_LENGTH = 1000;
 
     // Função para mostrar notificação tipo popup
-    const showPopupNotification = (message, type = 'info') => {
-        // Remover notificação existente
-        const existingNotification = document.querySelector('.info-notification');
-        if (existingNotification) {
-            existingNotification.remove();
+    
+
+    const handleFavoriteToggle = async () => {
+        if (!user) {
+            navigate('/login-ptbr');
+            return;
         }
 
-        // Criar elemento de notificação
-        const notification = document.createElement('div');
-        notification.className = `info-notification info-notification-${type}`;
-        notification.innerHTML = `
-            <div class="info-notification-content">
-                <span>${message}</span>
-            </div>
-        `;
-
-        // Estilos da notificação
-        notification.style.position = 'fixed';
-        notification.style.top = '80px';
-        notification.style.right = '20px';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.zIndex = '1001';
-        notification.style.padding = '15px 30px';
-        notification.style.borderRadius = '8px';
-        notification.style.color = '#fff';
-        notification.style.fontWeight = '500';
-        notification.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-        notification.style.animation = 'slideInInfo 0.3s ease';
-
-        // Cores baseadas no tipo
-        switch (type) {
-            case 'success':
-                notification.style.background = '#27ae60';
-                break;
-            case 'error':
-                notification.style.background = '#e74c3c';
-                break;
-            case 'warning':
-                notification.style.background = '#f39c12';
-                break;
-            default:
-                notification.style.background = '#3498db';
+        // Validar se media foi carregado
+        if (!media) {
+            return;
         }
 
-        document.body.appendChild(notification);
-
-        // Adicionar estilos de animação se não existirem
-        if (!document.getElementById('info-notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'info-notification-styles';
-            style.textContent = `
-                @keyframes slideInInfo {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
+        try {
+            // Extract year from release_date
+            let year = null;
+            if (media.release_date) {
+                if (typeof media.release_date === 'string') {
+                    year = media.release_date.split('-')[0];
+                } else {
+                    year = new Date(media.release_date).getFullYear();
                 }
-                
-                @keyframes slideOutInfo {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Remover após 5 segundos
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOutInfo 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
             }
-        }, 5000);
+            
+            // Format poster URL (avoid duplication)
+            let posterUrl = null;
+            if (media.poster_path) {
+                if (media.poster_path.startsWith('http')) {
+                    posterUrl = media.poster_path;
+                } else {
+                    posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+                }
+            }
+            
+            const response = await api.post(`/media/${movieId}/favorite`, {
+                title: media.title || media.name || 'Unknown',
+                year: year,
+                poster: posterUrl,
+                mediaType: isTV ? 'tv' : 'movie',
+                externalId: movieId
+            });
+            if (response.data.success) {
+                setIsFavorited(response.data.favorited);
+                // Disparar evento para atualizar favoritos em tempo real
+                window.dispatchEvent(new CustomEvent('favoriteAdded', { 
+                    detail: { 
+                        mediaId: movieId, 
+                        favorited: response.data.favorited 
+                    } 
+                }));
+                // Também disparar evento genérico para compatibilidade
+                window.dispatchEvent(new Event('favoriteRemoved'));
+            }
+        } catch (error) {
+            console.error('Error updating favorites:', error);
+        }
+    };
+
+    // Função para toggle watched
+    const handleWatchedToggle = async () => {
+        if (!user) {
+            navigate('/login-ptbr');
+            return;
+        }
+
+        if (!media || !movieId) {
+            return;
+        }
+
+        try {
+            // Atualizar estado imediatamente (otimista)
+            const newWatchedState = !isWatched;
+            setIsWatched(newWatchedState);
+            
+            // Salvar no localStorage para persistir mesmo se a requisição falhar
+            const watchedKey = `watched_${movieId}`;
+            if (newWatchedState) {
+                localStorage.setItem(watchedKey, 'true');
+            } else {
+                localStorage.removeItem(watchedKey);
+            }
+
+            // Extract year from release_date
+            let year = null;
+            if (media.release_date) {
+                if (typeof media.release_date === 'string') {
+                    year = media.release_date.split('-')[0];
+                } else {
+                    year = new Date(media.release_date).getFullYear();
+                }
+            }
+            
+            // Format poster URL (avoid duplication)
+            let posterUrl = null;
+            if (media.poster_path) {
+                if (media.poster_path.startsWith('http')) {
+                    posterUrl = media.poster_path;
+                } else {
+                    posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+                }
+            }
+            
+            const response = await api.post(`/media/${movieId}/watched`, {
+                title: media.title || media.name || 'Unknown',
+                year: year,
+                poster: posterUrl,
+                mediaType: isTV ? 'tv' : 'movie',
+                externalId: movieId
+            });
+            if (response.data.success) {
+                // Confirmar estado com resposta do servidor
+                setIsWatched(response.data.watched);
+                if (response.data.watched) {
+                    localStorage.setItem(`watched_${movieId}`, 'true');
+                } else {
+                    localStorage.removeItem(`watched_${movieId}`);
+                }
+                // Disparar evento para atualizar em tempo real
+                window.dispatchEvent(new CustomEvent('watchedToggled', { 
+                    detail: { 
+                        mediaId: movieId, 
+                        watched: response.data.watched 
+                    } 
+                }));
+            }
+        } catch (error) {
+            console.error('Error updating watched:', error);
+            // Reverter estado em caso de erro
+            setIsWatched(!isWatched);
+            localStorage.removeItem(`watched_${movieId}`);
+        }
     };
 
     // Função para mostrar modal de confirmação de delete
@@ -288,6 +346,62 @@ const InfoPTBR = () => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
+    // Verificar se a mídia está favoritada ao montar o componente
+    useEffect(() => {
+        const checkIfFavorited = async () => {
+            if (!user || !movieId) return;
+            
+            try {
+                const response = await api.get(`/media/${movieId}/is-favorite`);
+                if (response.data.success) {
+                    console.log(`❤️ Verificando favorito: ${response.data.favorited}`);
+                    setIsFavorited(response.data.favorited);
+                }
+            } catch (error) {
+                console.error('Erro ao verificar favorito:', error);
+                setIsFavorited(false);
+            }
+        };
+
+        checkIfFavorited();
+    }, [movieId, user]);
+
+    // Verificar se a mídia foi marcada como assistida ao montar o componente
+    useEffect(() => {
+        const checkIfWatched = async () => {
+            if (!movieId) return;
+            
+            // Primeiro, verificar localStorage
+            const localStorageValue = localStorage.getItem(`watched_${movieId}`);
+            if (localStorageValue === 'true') {
+                setIsWatched(true);
+                console.log(`👁️ Status assistido carregado do localStorage: true`);
+            }
+            
+            // Depois, confirmar com o servidor se usuário estiver logado
+            if (!user) return;
+            
+            try {
+                const response = await api.get(`/media/${movieId}/is-watched`);
+                if (response.data.success) {
+                    console.log(`👁️ Verificando assistido no servidor: ${response.data.watched}`);
+                    setIsWatched(response.data.watched);
+                    // Sincronizar localStorage com servidor
+                    if (response.data.watched) {
+                        localStorage.setItem(`watched_${movieId}`, 'true');
+                    } else {
+                        localStorage.removeItem(`watched_${movieId}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar assistido:', error);
+                // Se houver erro, manter o valor do localStorage
+            }
+        };
+
+        checkIfWatched();
+    }, [movieId, user]);
+
     useEffect(() => {
         const loadMedia = async () => {
             try {
@@ -341,7 +455,13 @@ const InfoPTBR = () => {
             } catch (err) {
                 console.error('❌ Erro ao carregar detalhes:', err);
                 console.error('Erro completo:', err.response?.data || err.message);
-                setError('Falha ao carregar detalhes da mídia: ' + err.message);
+                let errorMsg = 'Falha ao carregar detalhes da mídia';
+                if (err.message && err.message.includes('Nenhuma review encontrada')) {
+                    errorMsg = 'Esta mídia não está disponível. Nenhuma informação encontrada no TMDB ou banco de dados local.';
+                } else {
+                    errorMsg = 'Falha ao carregar detalhes da mídia: ' + err.message;
+                }
+                setError(errorMsg);
             } finally {
                 setLoading(false);
             }
@@ -632,7 +752,6 @@ const InfoPTBR = () => {
     // Lidar com like/unlike
     const handleLikeReview = async (reviewId, isCurrentlyLiked) => {
         if (!user) {
-            showPopupNotification('Faça login para curtir uma avaliação', 'info');
             return;
         }
 
@@ -824,6 +943,22 @@ const InfoPTBR = () => {
     return (
         <>
             <BackButtonPTBR />
+            {error && (
+                <div className="error-message-container">
+                    <div className="error-message">
+                        <h2>⚠️ Erro ao carregar</h2>
+                        <p>{error}</p>
+                        <button onClick={() => window.history.back()} className="back-btn">
+                            Voltar
+                        </button>
+                    </div>
+                </div>
+            )}
+            {loading ? (
+                <div className="loading-message-container">
+                    <div className="loading-spinner">Carregando...</div>
+                </div>
+            ) : (
             <main className="movie-info-page">
                 {/* Hero Section com Banner do Filme */}
                 <section className="movie-hero">
@@ -868,18 +1003,26 @@ const InfoPTBR = () => {
                                 </div>
 
                                 <div className="movie-actions">
-                                    <button className="action-btn-info watched" data-action="watched">
+                                    <button 
+                                        className={`action-btn-info watched ${isWatched ? 'active' : ''}`}
+                                        data-action="watched"
+                                        onClick={handleWatchedToggle}
+                                    >
                                         <FontAwesomeIcon icon={faEye} />
                                         <span>Assistido</span>
                                     </button>
-                                    <button className="action-btn-info like" data-action="like">
+                                    <button 
+                                        className={`action-btn-info like ${isFavorited ? 'active' : ''}`} 
+                                        data-action="like"
+                                        onClick={handleFavoriteToggle}
+                                    >
                                         <FontAwesomeIcon icon={faHeart} />
                                         <span>Gostei</span>
                                     </button>
-                                    <button className="action-btn-info add-list" data-action="addToList">
+                                    {/* <button className="action-btn-info add-list" data-action="addToList">
                                         <FontAwesomeIcon icon={faPlus} />
                                         <span>Adicionar à Lista</span>
-                                    </button>
+                                    </button> */}
                                 </div>
 
                                 <div className="movie-description">
@@ -1269,6 +1412,7 @@ const InfoPTBR = () => {
                     </div>
                 </section>
             </main>
+            )}
         </>
     );
 };;

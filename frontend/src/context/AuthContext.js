@@ -3,7 +3,7 @@ import { api } from '../services/axiosConfig';
 
 const AuthContext = createContext(undefined);
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://rescene-site.vercel.app/api';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -108,6 +108,10 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = (userData) => {
     setUser(prev => prev ? { ...prev, ...userData } : null);
+    // Se há preferência de idioma, salvar no localStorage
+    if (userData?.preferredLanguage) {
+      localStorage.setItem('userLanguage', userData.preferredLanguage);
+    }
   };
 
   return (

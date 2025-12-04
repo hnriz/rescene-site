@@ -39,6 +39,68 @@
     border-color: #fada5e;
   }
   
+  .filter-type-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .filter-type-btn,
+  .sort-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  
+  .filter-type-btn:hover,
+  .sort-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fada5e;
+  }
+  
+  .filter-type-dropdown-content {
+    position: absolute;
+    background: #1A1A23;
+    border: 1px solid rgba(250, 218, 94, 0.3);
+    border-radius: 6px;
+    min-width: 150px;
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .filter-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+  }
+  
+  .filter-option:hover {
+    background: rgba(250, 218, 94, 0.1);
+    color: #fada5e;
+  }
+  
+  .filter-option.selected {
+    background: rgba(250, 218, 94, 0.2);
+    color: #fada5e;
+  }
+  
   .contentGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

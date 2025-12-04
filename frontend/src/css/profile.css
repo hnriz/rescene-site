@@ -91,11 +91,71 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(135deg, #1a1823 0%, #2d2638 50%, #1c1b25 100%);
+  z-index: 0;
+  overflow: hidden;
+}
 
-  filter: brightness(0.4);
+.profileBackground::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -15%;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(250, 218, 94, 0.25) 0%, transparent 65%);
+  pointer-events: none;
   z-index: 1;
+  animation: float 18s ease-in-out infinite;
+}
+
+.profileBackground::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(186, 85, 211, 0.2) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+  animation: float 22s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.profileOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(250, 218, 94, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 20%, rgba(186, 85, 211, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(100, 200, 255, 0.05) 0%, transparent 50%),
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent 80px,
+      rgba(250, 218, 94, 0.01) 80px,
+      rgba(250, 218, 94, 0.01) 81px),
+    repeating-linear-gradient(90deg,
+      transparent,
+      transparent 120px,
+      rgba(186, 85, 211, 0.015) 120px,
+      rgba(186, 85, 211, 0.015) 121px),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.05) 100%);
+  z-index: 2;
+  pointer-events: none;
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .profileContent {
@@ -110,7 +170,7 @@
   align-items: flex-start;
   margin-bottom: 30px;
   flex-wrap: wrap;
-  min-width: 1000px;
+  min-width: 500px;
 }
 
 .avatarContainer {
@@ -1379,6 +1439,20 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0px);
   }
 }
 

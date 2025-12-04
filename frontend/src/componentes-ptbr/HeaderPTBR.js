@@ -34,6 +34,7 @@ function HeaderPTBR() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [placeholderText, setPlaceholderText] = useState('');
+    const [showSearchResults, setShowSearchResults] = useState(false);
 
     const searchInputRef = useRef(null);
     const searchTerms = [
@@ -94,7 +95,27 @@ function HeaderPTBR() {
     const handleSearchInputChange = (e) => {
         const query = e.target.value;
         setSearchQuery(query);
+        setShowSearchResults(true);
         handleSearchInput(query);
+    };
+
+    // Handler para Enter e clique do botão de busca
+    const handleSearchSubmit = (e) => {
+        if (e) {
+            e.preventDefault();
+        }
+        if (searchQuery.trim().length > 0) {
+            navigate(`/pesquisa?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery('');
+            setShowSearchResults(false);
+            clearResults();
+        }
+    };
+
+    const handleSearchKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearchSubmit(e);
+        }
     };
 
     // Toggle dropdowns
@@ -138,11 +159,11 @@ function HeaderPTBR() {
             if (
                 !event.target.closest('.user-dropdown') && 
                 !event.target.closest('.notification-dropdown') &&
-                !event.target.closest('.search-container') &&
-                !event.target.closest('.search-results')
+                !event.target.closest('.search-container')
             ) {
                 setIsUserDropdownOpen(false);
                 setIsNotificationDropdownOpen(false);
+                setShowSearchResults(false);
             }
         };
 
@@ -207,18 +228,22 @@ function HeaderPTBR() {
                             type="text"
                             id="search-input"
                             ref={searchInputRef}
-                            placeholder="Buscar filmes, séries ou usuários..."
                             autoComplete="off"
                             value={searchQuery}
                             onChange={handleSearchInputChange}
+                            onKeyPress={handleSearchKeyPress}
                         />
-                        <button type="submit" className="search-btn-header">
+                        <button 
+                            type="submit" 
+                            className="search-btn-header"
+                            onClick={handleSearchSubmit}
+                        >
                             <FontAwesomeIcon icon={faSearch} />
                         </button>
                         <div
                             className="search-results"
                             id="search-results"
-                            style={{ display: searchResults.length > 0 || isLoading ? 'block' : 'none' }}
+                            style={{ display: showSearchResults && (searchResults.length > 0 || isLoading) ? 'block' : 'none' }}
                         >
                             {isLoading && (
                                 <div className="search-loading">

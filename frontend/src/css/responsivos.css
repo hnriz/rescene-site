@@ -1,0 +1,538 @@
+/*
+  RESUMO — Mudanças realizadas FORA de `responsivos.css`
+
+  Este comentário lista, em alto nível, os arquivos e alterações que foram feitas
+  no workspace além das regras adicionadas a `responsivos.css`. Mantido aqui
+  para referência e rastreabilidade.
+
+  1) JavaScript / Frontend public scripts
+     - `frontend/public/js/rankUsers.js`
+       * Normalização e parse/format de contagens de seguidores.
+       * Ordenação dos usuários por seguidores (followers) e renderização da
+         coluna de seguidores no ranking.
+
+  2) Páginas e Navegação (PT-BR e EN)
+     - Vários arquivos de ranks e navegação atualizados para remover links
+       "Top Usuários" / "Top Comentários" (ex.: `Filmes.js`/`Movies.js`,
+       `Series.js`/`TVShows.js`, `Usuarios.js`/`Users.js`, `Comentarios.js`/`Comments.js`).
+
+  3) Perfis (PT-BR e EN)
+     - `frontend/src/paginas-ptbr/Perfil.js` e `frontend/src/pages-en/Profile.js`
+       * Permitido abrir perfil público sem autenticação: adicionado formulário
+         de lookup público quando não autenticado.
+       * Adicionado comportamento de "perfil provisório" (demo) que popula
+         `profileUser` com dados mock e insere métricas (seguidores, média, reviews).
+       * Corrigida posição de hooks (`useState`) — movidos para o topo do componente
+         para evitar erros de hooks do React.
+
+  4) Reviews (componente)
+     - `frontend/src/componentes-ptbr/PerfilReviews.js`
+       * Aceita agora uma prop `demoReviews` e, quando fornecida, renderiza essas
+         reviews locais ao invés de chamar o serviço (útil para demo visual).
+     - `frontend/src/paginas-ptbr/Perfil.js` foi atualizado para criar e passar
+       `demoReviews` quando o demo profile é ativado.
+
+  5) CSS fora de `responsivos.css`
+     - `frontend/src/css/profile.css`
+       * Ajustes no layout e limpeza do bloco responsivo de reviews (deixado "cru"
+         para reescrever o responsivo conforme solicitado).
+     - `frontend/src/css/rank.css`
+       * Regras para evitar overflow do ranking: `overflow-x: auto`, `min-width`
+         em tabelas e regras para que células quebrem texto em vez de sumirem.
+
+  6) Correções/Outros
+     - Pequenas correções de build/ESLint (remoção de declarações duplicadas de
+       variáveis/hooks em `Profile.js` EN e limpeza de um `+` acidental em PT-BR).
+
+  Observações:
+  - Esta listagem é um resumo orientado ao desenvolvedor das mudanças aplicadas
+    durante a sessão de trabalho; para ver diffs linha-a-linha, consulte o histórico
+    de alterações nos arquivos mencionados.
+
+*/
+
+/* Exemplo: grid responsivo para catálogo (padrão, tablet, mobile) */
+.catalog-grid {
+        /*
+        ================================================================================
+        RESPONSIVOS.CSS — CHANGELOG & RESUMO DE ALTERAÇÕES (atualizado 2025-12-02)
+        ================================================================================
+
+        Objetivo
+        - Centralizar overrides e correções responsivas aplicadas durante a sessão atual,
+            documentar o que foi adicionado/alterado/removido e apontar próximos passos.
+
+        Resumo das mudanças aplicadas (CSS)
+        - Arquivo criado/centralizado: `frontend/src/css/responsivos.css` (principal lugar
+            para overrides compartilhados responsivos).
+        - Carrossel
+            - Regras de sizing movidas para cá (mantendo `aspect-ratio: 2/3` para posters).
+            - Desativei o zoom de hover nas capas dentro de carrosséis (comentado/override)
+                porque causava overflow e interceptava eventos das setas.
+            - Adicionado `gap`/`padding` e fallbacks (`margin-right`) nos breakpoints móveis
+                para aumentar espaçamento entre itens e evitar que fiquem "grudados".
+            - No desktop, ajustes em `index.css` (flex-basis) foram introduzidos para garantir
+                que 4 itens completos sejam visíveis por página (calculo com gaps considerado).
+
+        - Comportamento de cartas/posters
+            - Forçar `object-fit: cover` e `width/height: 100%` para que o poster preencha
+                o `movie-card` corretamente (regras aplicadas aqui e em `index.css`).
+
+        - Hero / Ícone decorativo
+            - Regras relacionadas ao posicionamento do ícone decorativo (pseudo-elemento
+                `::before`) foram padronizadas: originalmente em `movies.css`, foram movidas/ajustadas
+                para que o ícone fique sempre ao lado de `.hero-text-catalog` com breakpoints
+                para esconder em telas muito pequenas.
+
+        Resumo das mudanças aplicadas (JS / React)
+        - Home (PT-BR e EN)
+            - Implementada lógica de paginação do carrossel mais robusta:
+                * Atualizações para `updateCarousel` para alinhar ao primeiro item da página
+                    (leva em conta padding e margin-left para evitar cortes).
+                * Listener de scroll (`onScroll`) atualizado para detectar o item cujo centro
+                    está mais próximo do centro visível do carrossel (usa `getBoundingClientRect()`),
+                    assim a paginação/dots refletem corretamente o que o usuário vê mesmo com gaps
+                    e margins.
+            - Observação: algumas alterações temporárias foram revertidas pelo usuário em
+                momentos anteriores — ver histórico de commits/edições locais caso algo não
+                esteja presente.
+
+        - Info (PT-BR / EN)
+            - Trabalho anterior de dots funcionais via scroll listener foi parcialmente aplicado
+                mas não foi modificado novamente aqui; em alguns arquivos o código foi adaptado
+                para usar `carousel` refs e scroll-aware dots.
+
+        Fixes e correções
+        - Corrigi um trecho de código acidentalmente injetado em `HomePTBR.js` dentro
+            do fallback de `Promise.all(...)` que referenciava variáveis não declaradas
+            (`itemWidth`, `gap`, `carousel`, `page`). Substituí o map para chamar corretamente
+            `tmdbService.getMovieDetails` ou `tmdbService.getTVShowDetails` conforme o tipo.
+
+        Avisos/Lint
+        - `movies.css` contém avisos do linter sobre propriedades vendor-prefixed
+            (ex.: `-webkit-background-clip`, `-webkit-line-clamp`). Essas são recomendações
+            para adicionar as propriedades padrão correspondentes (`background-clip`, `line-clamp`)
+            para melhor compatibilidade; não são bloqueantes.
+
+        Arquivos alterados (resumo rápido)
+        - Editados / adicionados:
+            - `frontend/src/css/responsivos.css` (criado/centralizado overrides e changelog)
+            - `frontend/src/css/movies.css` (posicionamento de `.hero-text-catalog`, pseudo-elem `::before`)
+            - `frontend/src/css/series.css` (mesmas regras do hero para séries)
+            - `frontend/src/css/index.css` (ajuste de `.carousel` / `.carousel-item-home` para 4 itens)
+            - `frontend/src/pages-en/Home.js` (updateCarousel + onScroll melhorias)
+            - `frontend/src/paginas-ptbr/HomePTBR.js` (updateCarousel + onScroll melhorias)
+            - Outros: pequenas mudanças e correções pontuais em componentes relacionados a carrossel
+                e hero (ver histórico de edições para detalhes linha-a-linha).
+
+        Decisões de implementação
+        - Preferi calcular o item "visual" usando bounding rects para o centro do item
+            (isso já inclui margins/gap) em vez de confiar somente em `offsetWidth`.
+        - Adicionei fallbacks CSS (margin-right) quando `gap` em flex containers não for
+            aplicado pelo navegador, e usei `!important` em regras responsivas quando preciso
+            para prevalecer sobre regras existentes em `index.css`.
+
+        Próximos passos recomendados
+        - Rodar o app localmente e testar as navegações do carrossel (setas/dots) em
+            diferentes breakpoints (desktop/tablet/mobile).
+        - Tornar `CAROUSEL_ITEMS_PER_PAGE` responsivo (4/3/2 conforme largura) para uma
+            UX ainda mais consistente.
+        - Adicionar um recálculo automático (re-run `initializeCarousel`) quando as imagens
+            do carrossel terminarem de carregar para evitar layout shift (recomendado).
+        - Silenciar os avisos do linter adicionando as propriedades padrão equivalentes
+            às regras `-webkit-*` onde aplicável.
+
+        Observação final
+        - Este changelog foi gerado a partir do histórico da sessão atual e das edições
+            realizadas no workspace. Se houver commits ou alterações locais não submetidas,
+            pode haver pequenas diferenças; recomendo revisar o diff/controle de versão
+            antes de aceitar mudanças finais.
+
+        ================================================================================
+        */
+}
+
+
+.hero-cta-index .cta-btn {
+    max-height: 70px;
+}
+
+@media (max-width: 1349px) {
+
+    .floating-elements,
+    .floating-cards,
+    .floating-card,
+    .floating-element {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
+.hero-content p {
+    color: white;
+}
+
+@media (max-width: 1200px) {
+    .hero-content h1 {
+        text-align: center;
+    }
+
+    .hero-cta-index {
+        justify-content: center;
+    }
+}
+
+
+/* ===== Ajustes do carrossel (movidos para aqui) =====
+     Removido/alterado de outros arquivos:
+     - index.css: remoção do zoom em hover aplicado a `.movie-poster img` dentro de carousels
+     - movies.css/index.css: regras duplicadas de floating elements movidas para este arquivo
+     - header.css: instrução sobre exibir `.hamburger` quando `.main-nav` estiver escondida (ver header.css)
+     Estas alterações foram centralizadas neste arquivo para facilitar manutenção responsiva.
+*/
+
+/* Desativar zoom de capas dentro de carrosséis para responsive */
+/* .carousel .movie-poster img,
+.carousel-item-home .movie-card .movie-poster img,
+.carousel-item .movie-poster img {
+    transform: none !important;
+    transition: none !important;
+} */
+
+/* Sizing: fazer com que o movie-card dentro de carrosséis mantenha proporção e o poster preencha todo o espaço */
+.carousel-item-home .movie-card,
+.carousel .movie-card {
+    aspect-ratio: 2 / 3;
+    height: auto;
+}
+
+.carousel-item-home .movie-card .movie-poster,
+.carousel .movie-card .movie-poster {
+    height: 100%;
+}
+
+
+
+/* Garantir que imagens preencham corretamente (object-fit é definido em index.css) */
+
+/* Fim das regras de sizing do carrossel */
+
+/* Restaurar espaçamento entre cards em carrosséis e grids */
+.carousel-item {
+    /* garantir valor mínimo e consistência com gap */
+    flex: 0 0 calc(25% - 20px);
+    /* min-width: 180px; */
+    margin-right: 20px;
+}
+
+.movies-grid {
+    gap: 25px; /* caso seja um grid, garantir espaçamento entre cards */
+}
+
+/* Centralizar o movie-card horizontalmente quando for o único exibido */
+/* Carrossel (itens com wrapper) */
+.carousel .carousel-item-home:only-child,
+.carousel .carousel-item:only-child {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Caso o movie-card esteja direto dentro da carousel */
+.carousel .movie-card:only-child {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Grid de filmes: centralizar o único card */
+.movies-grid .movie-card:only-child {
+    justify-self: center !important; /* funciona em grid */
+}
+
+/* Flex container (centra por margin auto) */
+.movies-flex .movie-card:only-child {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
+/* Fim de responsivos.css */
+
+/* Esconder setas do carrossel em telas pequenas (mobile/tablet) */
+@media (max-width: 1223px) {
+    .carousel-arrow {
+        display: none;
+    }
+
+    .carousel-dots {
+        display: none;
+    }
+
+    /* Caso haja posicionamento absoluto que gere overflow clique, garantir overflow visível não exponha nada */
+    .carousel-container {
+        overflow: visible !important;
+    }
+}
+
+/* -------------------- Seção: Catálogo (início) --------------------
+     - Regras e notas para páginas de catálogo (filmes / séries)
+     - Objetivo: centralizar ajustes visuais e responsivos antes de tocar os componentes
+     - Conteúdo inicial: sugestões e regras base que podemos adaptar
+*/
+
+/* remoção do width fixo no movie-card */
+
+
+.movie-card .movie-poster {
+    width: 100%;
+    height: 100%;
+}
+
+.movie-card .movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ensures image fills and preserves aspect */
+    display: block;
+}
+
+@media (max-width: 968px) {
+    .movie-meta {
+        justify-content:center
+    }
+
+    .movie-title {
+        text-align: center;
+    }
+}
+
+
+/* ===== Profile responsive rules expanded to cover more screen sizes =====
+   Applies the design from profile.css but with extended breakpoints for wider coverage.
+   Breakpoints: 900px (tablet large), 600px (tablet/mobile). */
+@media (max-width: 900px) {
+
+    .profileContent {
+        display: flex;
+    }
+
+  .profileMainInfo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .nameAndBadge {
+    justify-content: center;
+  }
+
+  .profileActions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .profileSecondaryInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .followStats,
+  .profileMeta {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .userDetails {
+    text-align: center;
+  }
+
+  .userStatsMini {
+    justify-content: center;
+  }
+
+  .followStats {
+    max-width: 280px;
+  }
+
+  .profileActions {
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+  .profileAvatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .displayName {
+    font-size: 1.5rem;
+  }
+
+  .followStats {
+    gap: 15px;
+  }
+
+  .followStat strong {
+    font-size: 1.2rem;
+  }
+
+  .profileMeta {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* ===== Review responsive: keep poster visible at all screen sizes =====
+   Ensure .reviewCard poster doesn't disappear on narrow screens. */
+@media (max-width: 900px) {
+  .reviewCard {
+    flex-direction: row;
+    gap: 15px;
+  }
+
+  .reviewMovie {
+    flex-shrink: 0;
+    min-width: fit-content;
+    padding: 15px;
+  }
+
+  .moviePoster {
+    width: 120px;
+    height: 180px;
+    flex-shrink: 0;
+  }
+
+  .reviewContent {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .reviewCard {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .reviewMovie {
+    flex-shrink: 0;
+    min-width: fit-content;
+    padding: 10px;
+  }
+
+  .moviePoster {
+    width: 100px;
+    height: 150px;
+    flex-shrink: 0;
+  }
+
+  .reviewContent {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reviewHeader {
+    gap: 8px;
+  }
+
+  .movieTitle {
+    font-size: 0.95rem;
+  }
+
+  .reviewText p {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== About page responsive: hide icon when cut off =====
+   Hide .hero-content-about::before on narrow screens where it gets clipped. */
+@media (max-width: 900px) {
+  .hero-content-about::before {
+    display: none !important;
+  }
+}
+
+/* ===== Team section responsive: flex-wrap with reduced photos =====
+   Make all team photos visible with flex-wrap and smaller sizes. */
+@media (max-width: 1100px) {
+  .about-team {
+    width: 100%;
+    max-width: 90%;
+    gap: 40px;
+    padding: 0 20px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .team-row-1 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .employee-card {
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+  }
+
+  .employee-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-row-1 {
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .employee-card {
+    width: 160px;
+    height: 160px;
+  }
+
+  .employee-card .svg-inline--fa {
+    font-size: 100px !important;
+  }
+
+  .employee-name h4 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .employee-name p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-row-1 {
+    gap: 15px;
+  }
+
+  .employee-card {
+    width: 130px;
+    height: 130px;
+  }
+
+  .employee-card .svg-inline--fa {
+    font-size: 80px !important;
+  }
+
+  .employee-name h4 {
+    font-size: 0.9rem;
+  }
+
+  .employee-name p {
+    font-size: 0.75rem;
+  }
+}

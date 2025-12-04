@@ -61,7 +61,7 @@ const Profile = () => {
       // Buscar dados do usuário via endpoint público
       const fetchUserProfile = async () => {
         try {
-          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+          const API_URL = process.env.REACT_APP_API_URL || 'https://rescene-site.vercel.app/api';
           const response = await fetch(`${API_URL}/user/${username}`);
           if (response.ok) {
             const data = await response.json();
@@ -248,8 +248,9 @@ const Profile = () => {
         <section className="profileHeader">
         <div
           className="profileBackground"
-          style={{ backgroundImage: `url(${profileBg})` }}
-        />
+        >
+          <div className="profileOverlay"></div>
+        </div>
 
         <div className="profileContent container">
           <div className="profileMainInfo">
@@ -364,8 +365,8 @@ const Profile = () => {
       </nav>
 
       {activeButton === "reviews" && <ProfileReviews userId={profileUser?.id} isOwnProfile={isOwnProfile} />}
-      {activeButton === "favorites" && <ProfileFavorites />}
-      {activeButton === "watched" && <ProfileWatched />}
+      {activeButton === "favorites" && <ProfileFavorites userId={profileUser?.id} />}
+      {activeButton === "watched" && <ProfileWatched userId={profileUser?.id} />}
       {activeButton === "lists" && <ProfileLists userId={profileUser?.id} isOwnProfile={isOwnProfile} />}
       {activeButton === "stats" && <ProfileStats />}
 

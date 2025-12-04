@@ -16,8 +16,8 @@ import Settings from "./pages-en/Settings";
 import LoginEN from "./pages-en/LoginEN";
 import RankMovies from "./pages-en/ranks/Movies.js";
 import RankTVShows from "./pages-en/ranks/TVShows.js"
-import RankUsers from "./pages-en/ranks/Users.js"
-import RankComments from "./pages-en/ranks/Comments.js"
+// import RankUsers from "./pages-en/ranks/Users.js"
+// import RankComments from "./pages-en/ranks/Comments.js"
 
 import HomePTBR from "./paginas-ptbr/HomePTBR";
 import HeaderPTBR from "./componentes-ptbr/HeaderPTBR";
@@ -37,8 +37,8 @@ import Configuracoes from "./paginas-ptbr/Configuracoes";
 import LoginPTBR from "./paginas-ptbr/LoginPTBR";
 import RankFilmes from "./paginas-ptbr/ranks/Filmes.js";
 import RankSeries from "./paginas-ptbr/ranks/Series.js"
-import RankUsuarios from "./paginas-ptbr/ranks/Usuarios.js"
-import RankComentarios from "./paginas-ptbr/ranks/Comentarios.js"
+// import RankUsuarios from "./paginas-ptbr/ranks/Usuarios.js"
+// import RankComentarios from "./paginas-ptbr/ranks/Comentarios.js"
 import ErrorPage from "./pages-en/ErrorPage";
 import PaginaErro from "./paginas-ptbr/PaginaErro";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -79,6 +79,7 @@ import './css/settingsSecurity.css';
 import './css/login-hub-rescene.css';
 import './css/errorPage.css';
 import './css/contact.css';
+import './css/responsivos.css'
 
 // Componente que renderiza header/footer e conteúdo
 function AppContent() {
@@ -123,8 +124,8 @@ function AppContent() {
           <Route path="/:username/list-edit/:listId" element={<ProtectedEnRoute element={<ListEdit />} />} />
           <Route path="/rankMovies" element={<ProtectedEnRoute element={<RankMovies />} />} />
           <Route path="/rankTVShows" element={<ProtectedEnRoute element={<RankTVShows />} />} />
-          <Route path="/rankUsers" element={<ProtectedEnRoute element={<RankUsers />} />} />
-          <Route path="/rankComments" element={<ProtectedEnRoute element={<RankComments />} />} />
+          {/* <Route path="/rankUsers" element={<ProtectedEnRoute element={<RankUsers />} />} />
+          <Route path="/rankComments" element={<ProtectedEnRoute element={<RankComments />} />} /> */}
           <Route path="/settings" element={<ProtectedEnRoute element={<Settings />} />} />
           <Route path="/login-en" element={<LoginEN />} />
 
@@ -152,8 +153,8 @@ function AppContent() {
           <Route path="/info-ptbr/:type/:movieId" element={<ProtectedPTBRRoute element={<InfoPTBR />} />} />
           <Route path="/top-filmes" element={<ProtectedPTBRRoute element={<RankFilmes />} />} />
           <Route path="/top-series" element={<ProtectedPTBRRoute element={<RankSeries />} />} />
-          <Route path="/top-usuarios" element={<ProtectedPTBRRoute element={<RankUsuarios />} />} />
-          <Route path="/top-comentarios" element={<ProtectedPTBRRoute element={<RankComentarios />} />} />
+          {/* <Route path="/top-usuarios" element={<ProtectedPTBRRoute element={<RankUsuarios />} />} />
+          <Route path="/top-comentarios" element={<ProtectedPTBRRoute element={<RankComentarios />} />} /> */}
           <Route path="/configuracoes" element={<ProtectedPTBRRoute element={<Configuracoes />} />} />
           <Route path="/login-ptbr" element={<LoginPTBR />} />
 

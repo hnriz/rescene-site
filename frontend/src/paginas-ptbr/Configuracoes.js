@@ -91,6 +91,10 @@ function Configuracoes() {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault();
+        console.log('💾 handleSaveProfile acionado!');
+        console.log('   languageChanged:', languageChanged);
+        console.log('   tempLanguage:', tempLanguage);
+        console.log('   language:', language);
         setIsLoading(true);
         setMessage('');
 
@@ -99,7 +103,9 @@ function Configuracoes() {
                 '/user/profile',
                 {
                     displayName: formData.displayName,
-                    bio: formData.bio
+                    bio: formData.bio,
+                    // Incluir idioma se foi alterado
+                    ...(languageChanged && { preferredLanguage: tempLanguage })
                 }
             );
 
@@ -107,23 +113,32 @@ function Configuracoes() {
                 // setMessage('✅ Perfil atualizado com sucesso!');
                 updateUser({
                     displayName: formData.displayName,
-                    bio: formData.bio
+                    bio: formData.bio,
+                    ...(languageChanged && { preferredLanguage: tempLanguage })
                 });
 
                 // Se o idioma foi mudado, atualizar contexto e navegar
-                if (languageChanged && tempLanguage !== language) {
-                    console.log('🌐 Salvando mudança de idioma para:', tempLanguage);
+                if (languageChanged) {
+                    console.log('🌐 Mudança de idioma detectada!');
+                    console.log('   Idioma selecionado:', tempLanguage);
+                    console.log('   Idioma atual da página: /configuracoes (PT-BR)');
+                    
+                    // Atualizar o contexto de idioma
                     setLanguage(tempLanguage);
                     setLanguageChanged(false);
+                    setTempLanguage(tempLanguage);
+                    
+                    // Aguardar um pouco e depois fazer o reload com a nova rota
                     setTimeout(() => {
                         if (tempLanguage === 'pt-br') {
-                            navigate('/configuracoes');
+                            console.log('🔄 Redirecionando para /configuracoes');
+                            window.location.href = '/configuracoes';
                         } else {
-                            navigate('/settings');
+                            console.log('🔄 Redirecionando para /settings');
+                            window.location.href = '/settings';
                         }
-                    }, 100);
+                    }, 500);
                 } else {
-                    setLanguageChanged(false);
                     setTimeout(() => setMessage(''), 3000);
                 }
             }
@@ -265,11 +280,7 @@ function Configuracoes() {
                                     <p>Gerencie suas informações públicas</p>
                                 </div>
 
-                                {/* {message && (
-                            <div className="message-alert">
-                                {message}
-                            </div>
-                        )} */}
+                              
 
                                 <form id="profile-form" class="settings-form" onSubmit={handleSaveProfile}>
                                     <div class="form-grid">

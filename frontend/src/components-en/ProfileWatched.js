@@ -1,5 +1,10 @@
 import {useEffect, useState} from 'react';
+import { api } from '../services/axiosConfig';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import postTemplate from '../img/postTemplate.jpg';
 import {
     faStar,
     faStarHalfAlt,
@@ -16,43 +21,137 @@ import {
 import '../css/profile.css';
 import '../css/profileWatched.css';
 
-function ProfileWatched() {
+function ProfileWatched({ userId }) {
+    const { user } = useAuth();
+    const { language } = useLanguage();
+    const navigate = useNavigate();
+    const [watched, setWatched] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedSort, setSelectedSort] = useState('recent');
+    const [removingWatchedId, setRemovingWatchedId] = useState(null);
+    const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-    // Cards data
-    const allCards = [
-        { id: 1, type: 'movie', title: 'Interestelar', year: '2014', duration: '169 min', date: '2023-10-15', rating: 4.8, poster: '../src/img/poster1.jpg' },
-        { id: 2, type: 'series', title: 'Breaking Bad', year: '2008-2013', duration: '5 temporadas', date: '2023-09-22', rating: 4.9, poster: '../src/img/poster11.jpg' },
-        { id: 3, type: 'movie', title: 'O Poderoso Chefão', year: '1972', duration: '175 min', date: '2023-08-05', rating: 4.7, poster: '../src/img/poster15.jpeg' }
-    ];
+    // Determinar se é o próprio perfil ou de outro usuário
+    useEffect(() => {
+        setIsOwnProfile(!userId || (user && user.id === parseInt(userId)));
+    }, [userId, user]);
 
-    // Filter cards based on selectedFilter
-    const filteredCards = allCards.filter(card => {
+    // Carregar assistidos ao montar componente
+    useEffect(() => {
+        if (isOwnProfile && user) {
+            fetchWatched();
+        } else if (userId) {
+            fetchPublicWatched();
+        }
+    }, [isOwnProfile, user, userId]);
+
+    const fetchWatched = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('/user/watched');
+            
+            if (response.data.success && response.data.watched) {
+                const formattedWatched = response.data.watched.map(item => ({
+                    id: item.id,
+                    type: item.mediaType === 'tv' ? 'series' : 'movie',
+                    title: item.title,
+                    year: item.year || 'N/A',
+                    duration: item.mediaType === 'tv' ? 'TV Series' : 'Movie',
+                    rating: 0,
+                    poster: item.poster || postTemplate,
+                    externalId: item.externalId || item.id,
+                    mediaType: item.mediaType
+                }));
+                setWatched(formattedWatched);
+            }
+        } catch (error) {
+            console.error('Error loading watched:', error);
+            setWatched([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchPublicWatched = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get(`/user/${userId}/watched`);
+            
+            if (response.data.success && response.data.watched) {
+                const formattedWatched = response.data.watched.map(item => {
+                    return {
+                        id: item.id,
+                        type: item.mediaType === 'tv' ? 'series' : 'movie',
+                        title: item.title,
+                        year: item.year || 'N/A',
+                        duration: item.mediaType === 'tv' ? 'TV Series' : 'Movie',
+                        rating: 0,
+                        poster: item.poster || postTemplate,
+                        externalId: item.externalId || item.id,
+                        mediaType: item.mediaType
+                    };
+                });
+                setWatched(formattedWatched);
+            }
+        } catch (error) {
+            console.error('Error loading public watched:', error);
+            setWatched([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveWatched = async (e, cardId) => {
+        e.stopPropagation();
+        setRemovingWatchedId(cardId);
+        try {
+            const card = watched.find(c => c.id === cardId);
+            const response = await api.post(`/media/${cardId}/watched`, {
+                title: card.title,
+                year: parseInt(card.year) || null,
+                poster: card.poster,
+                mediaType: card.mediaType,
+                externalId: card.externalId
+            });
+            if (response.data.success) {
+                setWatched(watched.filter(c => c.id !== cardId));
+                window.dispatchEvent(new CustomEvent('watchedRemoved', { 
+                    detail: { mediaId: cardId, watched: false } 
+                }));
+            }
+        } catch (error) {
+            console.error('Error removing watched:', error);
+        } finally {
+            setRemovingWatchedId(null);
+        }
+    };
+
+    const handleNavigateToInfo = (cardId, cardType) => {
+        const infoPath = language === 'pt-br' 
+            ? `/info-ptbr/${cardType === 'series' ? 'tv' : 'movie'}/${cardId}`
+            : `/info/${cardType === 'series' ? 'tv' : 'movie'}/${cardId}`;
+        
+        navigate(infoPath);
+    };
+
+    const getSortedCards = () => {
+        let sorted = [...watched];
+        if (selectedSort === 'recent') {
+            sorted.reverse();
+        } else if (selectedSort === 'alphabetical') {
+            sorted.sort((a, b) => a.title.localeCompare(b.title));
+        }
+        return sorted;
+    };
+
+    const filteredCards = getSortedCards().filter(card => {
         if (selectedFilter === 'all') return true;
         if (selectedFilter === 'movies') return card.type === 'movie';
         if (selectedFilter === 'series') return card.type === 'series';
         return true;
-    });
-
-    // Sort cards based on selectedSort
-    const sortedCards = [...filteredCards].sort((a, b) => {
-        switch(selectedSort) {
-            case 'recent':
-                return new Date(b.date) - new Date(a.date);
-            case 'oldest':
-                return new Date(a.date) - new Date(b.date);
-            case 'rating':
-                return b.rating - a.rating;
-            case 'title':
-                return a.title.localeCompare(b.title);
-            case 'duration':
-                return parseInt(b.duration) - parseInt(a.duration);
-            default:
-                return 0;
-        }
     });
 
     useEffect(() => {
@@ -90,156 +189,130 @@ function ProfileWatched() {
         return options[selectedSort] || 'Latest';
     };
 
-    // Script antigo não é necessário - funcionalidade está no React
-    // useEffect(() => {
-    //     // watched.js não é necessário com React
-    // }, []);
-        return (
-            <section class="watchedContent container">
-                <div class="contentHeader">
-                    <h2 class="sectionTitle">Watched Content</h2>
-                    <div class="contentStats">
-                        <div class="statBubble">
-                            <span class="statNumber">{allCards.length}</span>
-                            <span class="statLabel">Total</span>
-                        </div>
-                        <div class="statBubble">
-                            <span class="statNumber">{allCards.filter(c => c.type === 'movie').length}</span>
-                            <span class="statLabel">Movies</span>
-                        </div>
-                        <div class="statBubble">
-                            <span class="statNumber">{allCards.filter(c => c.type === 'series').length}</span>
-                            <span class="statLabel">TV Shows</span>
-                        </div>
+    if (loading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>;
+
+    return (
+        <section className="watchedContent container">
+            <div className="contentHeader">
+                <h2 className="sectionTitle">Watched Content</h2>
+                <div className="contentStats">
+                    <div className="statBubble">
+                        <span className="statNumber">{watched.length}</span>
+                        <span className="statLabel">Total</span>
+                    </div>
+                    <div className="statBubble">
+                        <span className="statNumber">{watched.filter(c => c.type === 'movie').length}</span>
+                        <span className="statLabel">Movies</span>
+                    </div>
+                    <div className="statBubble">
+                        <span className="statNumber">{watched.filter(c => c.type === 'series').length}</span>
+                        <span className="statLabel">TV Shows</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="contentFilters">
-                    <div class="filterGroup">
-                        <label>Filter:</label>
-                        <div class="filter-type-dropdown">
-                            <button 
-                                class="filter-type-btn"
-                                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            >
-                                {getFilterLabel()}
-                                <FontAwesomeIcon icon={isFilterOpen ? faChevronUp : faChevronDown} />
-                            </button>
-                            {isFilterOpen && (
-                                <div class="filter-type-dropdown-content">
-                                    <div class="filter-option" onClick={() => { setSelectedFilter('all'); setIsFilterOpen(false); }}>
-                                        All
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedFilter('movies'); setIsFilterOpen(false); }}>
-                                        Movies
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedFilter('series'); setIsFilterOpen(false); }}>
-                                        TV Shows
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div class="filterGroup">
-                        <label>Order by:</label>
-                        <div class="sort-dropdown">
-                            <button 
-                                class="sort-btn"
-                                onClick={() => setIsSortOpen(!isSortOpen)}
-                            >
-                                {getSortLabel()}
-                                <FontAwesomeIcon icon={isSortOpen ? faChevronUp : faChevronDown} />
-                            </button>
-                            {isSortOpen && (
-                                <div class="filter-type-dropdown-content">
-                                    <div class="filter-option" onClick={() => { setSelectedSort('recent'); setIsSortOpen(false); }}>
-                                        Latest
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedSort('oldest'); setIsSortOpen(false); }}>
-                                        Oldest
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedSort('rating'); setIsSortOpen(false); }}>
-                                        Rating
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedSort('title'); setIsSortOpen(false); }}>
-                                        Title (A-Z)
-                                    </div>
-                                    <div class="filter-option" onClick={() => { setSelectedSort('duration'); setIsSortOpen(false); }}>
-                                        Duration
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* <div class="viewOptions">
-                        <button class="viewButton active" data-view="grid">
-                            <FontAwesomeIcon icon={faTh} />
+            <div className="contentFilters">
+                <div className="filterGroup">
+                    <label>Filter:</label>
+                    <div className="filter-type-dropdown">
+                        <button 
+                            className="filter-type-btn"
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        >
+                            {getFilterLabel()}
+                            <FontAwesomeIcon icon={isFilterOpen ? faChevronUp : faChevronDown} />
                         </button>
-                        <button class="viewButton" data-view="list">
-                            <FontAwesomeIcon icon={faList} />
-                        </button>
-                    </div> */}
-                </div>
-
-                <div class="contentGrid">
-                    {sortedCards.map((card) => (
-                        <div key={card.id} class={`contentCard ${card.type}`} data-rating={card.rating} data-date={card.date} data-duration={card.duration}>
-                            <div class="cardImage">
-                                <img src={card.poster} alt={card.title}/>
-                                    <div class="cardOverlay">
-                                        {/* <div class="cardRating">
-                                            <FontAwesomeIcon icon={faStar} />
-                                            <span>{card.rating}</span>
-                                        </div> */}
-                                        <div class="cardActions">
-                                            <button class="actionButton watched active">
-                                                <FontAwesomeIcon icon={faEye} />
-                                            </button>
-                                            <button class="actionButton like">
-                                                <FontAwesomeIcon icon={faHeart} />
-                                            </button>
-                                        </div>
-                                    </div>
+                        {isFilterOpen && (
+                            <div className="filter-type-dropdown-content">
+                                <div className="filter-option" onClick={() => { setSelectedFilter('all'); setIsFilterOpen(false); }}>
+                                    All
+                                </div>
+                                <div className="filter-option" onClick={() => { setSelectedFilter('movies'); setIsFilterOpen(false); }}>
+                                    Movies
+                                </div>
+                                <div className="filter-option" onClick={() => { setSelectedFilter('series'); setIsFilterOpen(false); }}>
+                                    TV Shows
+                                </div>
                             </div>
-                            <div class="cardInfo">
-                                <h3 class="cardTitle">{card.title}</h3>
-                                <div class="cardMeta">
-                                    {/* <span class="cardYear">{card.year}</span> */}
-                                    {/* <span class="cardDuration">{card.duration}</span> */}
-                                    <span class="cardDate">{new Date(card.date).toLocaleDateString('en-GB').replace(/\//g, '/')}</span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="filterGroup">
+                    <label>Order by:</label>
+                    <div className="sort-dropdown">
+                        <button 
+                            className="sort-btn"
+                            onClick={() => setIsSortOpen(!isSortOpen)}
+                        >
+                            {getSortLabel()}
+                            <FontAwesomeIcon icon={isSortOpen ? faChevronUp : faChevronDown} />
+                        </button>
+                        {isSortOpen && (
+                            <div className="filter-type-dropdown-content">
+                                <div className="filter-option" onClick={() => { setSelectedSort('recent'); setIsSortOpen(false); }}>
+                                    Latest
                                 </div>
-                                <div class="cardFooter">
-                                    <div class="userRating">
-                                        <div class="stars">
-                                            <FontAwesomeIcon icon={faStar} />
-                                            <FontAwesomeIcon icon={faStar} />
-                                            <FontAwesomeIcon icon={faStar} />
-                                            <FontAwesomeIcon icon={faStar} />
-                                            <FontAwesomeIcon icon={faStarHalfAlt} />
-                                        </div>
-                                    </div>
+                                <div className="filter-option" onClick={() => { setSelectedSort('oldest'); setIsSortOpen(false); }}>
+                                    Oldest
+                                </div>
+                                <div className="filter-option" onClick={() => { setSelectedSort('rating'); setIsSortOpen(false); }}>
+                                    Rating
+                                </div>
+                                <div className="filter-option" onClick={() => { setSelectedSort('title'); setIsSortOpen(false); }}>
+                                    Title (A-Z)
+                                </div>
+                                <div className="filter-option" onClick={() => { setSelectedSort('duration'); setIsSortOpen(false); }}>
+                                    Duration
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="contentGrid">
+                {filteredCards.map((card) => (
+                    <div 
+                        key={card.id} 
+                        className={`contentCard ${card.type}`}
+                        onClick={() => handleNavigateToInfo(card.id, card.type)}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <div className="cardImage">
+                            <img 
+                                src={card.poster} 
+                                alt={card.title}
+                                onError={(e) => e.target.src = postTemplate}
+                            />
+                            <div className="cardOverlay">
+                                <div className="cardActions">
+                                    {/* <button className="actionButton watched active">
+                                        <FontAwesomeIcon icon={faEye} />
+                                    </button> */}
+                                    {isOwnProfile && (
+                                        <button 
+                                            className="actionButton remove"
+                                            onClick={(e) => handleRemoveWatched(e, card.id)}
+                                            disabled={removingWatchedId === card.id}
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    ))}
-                </div>
-
-                {/* <div class="pagination">
-                    <button class="paginationButton" disabled>
-                        <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    <button class="paginationButton active">1</button>
-                    <button class="paginationButton">2</button>
-                    <button class="paginationButton">3</button>
-                    <button class="paginationButton">
-                        <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
-                </div> */}
-            </section>
-        );
-    }
-
+                        <div className="cardInfo">
+                            <h3 className="cardTitle">{card.title}</h3>
+                            <div className="cardMeta">
+                                <span className="cardYear">{card.year}</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
 
 export default ProfileWatched;

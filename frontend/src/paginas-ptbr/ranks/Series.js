@@ -76,14 +76,14 @@ function RankSeries() {
                         <FontAwesomeIcon icon={faTv} />
                         <span>Top Séries</span>
                     </a>
-                    <a href="/top-usuarios" className="navItem">
+                    {/* <a href="/top-usuarios" className="navItem">
                         <FontAwesomeIcon icon={faUserGroup} />
                         <span>Top Usuários</span>
                     </a>
                     <a href="/top-comentarios" className="navItem">
                         <FontAwesomeIcon icon={faComment} />
                         <span>Top Comentários</span>
-                    </a>
+                    </a> */}
                 </nav>
 
                 {/* <!-- Conteúdo principal do ranking --> */}

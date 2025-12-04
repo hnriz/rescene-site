@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
+import { api } from '../services/axiosConfig';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import postTemplate from '../img/postTemplate.jpg';
 import {
     faStar,
     faHeart,
@@ -13,24 +18,91 @@ import {
 import '../css/profile.css';
 import '../css/profileFavorites.css';
 
-function ProfileFavorites() {
+function ProfileFavorites({ userId }) {
+    const { user } = useAuth();
+    const { language } = useLanguage();
+    const navigate = useNavigate();
+    const [favorites, setFavorites] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedSort, setSelectedSort] = useState('recent');
+    const [unfavoritingId, setUnfavoritingId] = useState(null);
+    const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-    // Cards data
-    const allCards = [
-        { id: 1, type: 'movie', title: 'Interestelar', year: '2014', duration: '169 min', rating: 4.8, poster: '../src/img/poster14.jpg' },
-        { id: 2, type: 'series', title: 'Breaking Bad', year: '2008-2013', duration: '5 temporadas', rating: 4.9, poster: '../src/img/poster5.jpg' },
-        { id: 3, type: 'movie', title: 'O Poderoso Chefão', year: '1972', duration: '175 min', rating: 4.7, poster: '../src/img/poster10.webp' },
-        { id: 4, type: 'series', title: 'Stranger Things', year: '2016-', duration: '4 temporadas', rating: 4.6, poster: '../src/img/poster13.jpg' },
-        { id: 5, type: 'movie', title: 'Parasita', year: '2019', duration: '132 min', rating: 4.5, poster: '../src/img/poster3.jpg' },
-        { id: 6, type: 'series', title: 'The Last of Us', year: '2023-', duration: '1 temporada', rating: 4.8, poster: '../src/img/poster1.jpg' }
-    ];
+    // Determinar se é o próprio perfil ou de outro usuário
+    useEffect(() => {
+        setIsOwnProfile(!userId || (user && user.id === parseInt(userId)));
+    }, [userId, user]);
+
+    // Carregar favoritos ao montar componente
+    useEffect(() => {
+        if (isOwnProfile && user) {
+            fetchFavorites();
+        } else if (userId) {
+            fetchPublicFavorites();
+        }
+    }, [isOwnProfile, user, userId]);
+
+    const fetchFavorites = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('/user/favorites');
+            
+            if (response.data.success && response.data.favorites) {
+                const formattedFavorites = response.data.favorites.map(fav => ({
+                    id: fav.id,
+                    type: fav.mediaType === 'tv' ? 'series' : 'movie',
+                    title: fav.title,
+                    year: fav.year || 'N/A',
+                    duration: fav.mediaType === 'tv' ? 'TV Series' : 'Movie',
+                    rating: 0,
+                    poster: fav.poster || postTemplate,
+                    externalId: fav.externalId || fav.id,
+                    mediaType: fav.mediaType
+                }));
+                setFavorites(formattedFavorites);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar favoritos:', error);
+            setFavorites([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchPublicFavorites = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get(`/user/${userId}/favorites`);
+            
+            if (response.data.success && response.data.favorites) {
+                const formattedFavorites = response.data.favorites.map(fav => {
+                    return {
+                        id: fav.id,
+                        type: fav.mediaType === 'tv' ? 'series' : 'movie',
+                        title: fav.title,
+                        year: fav.year || 'N/A',
+                        duration: fav.mediaType === 'tv' ? 'TV Series' : 'Movie',
+                        rating: 0,
+                        poster: fav.poster || postTemplate,
+                        externalId: fav.externalId || fav.id,
+                        mediaType: fav.mediaType
+                    };
+                });
+                setFavorites(formattedFavorites);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar favoritos públicos:', error);
+            setFavorites([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Filter cards based on selectedFilter
-    const filteredCards = allCards.filter(card => {
+    const filteredCards = favorites.filter(card => {
         if (selectedFilter === 'all') return true;
         if (selectedFilter === 'movies') return card.type === 'movie';
         if (selectedFilter === 'series') return card.type === 'series';
@@ -87,13 +159,52 @@ function ProfileFavorites() {
         return options[selectedSort] || 'Latest';
     };
 
-    // Script antigo não é necessário - funcionalidade está no React
-    // useEffect(() => {
-    //     // liked.js não é necessário com React
-    // }, []);
+    const handleNavigateToInfo = (cardId, cardType) => {
+        // Determine Info page based on language
+        // If PT-BR, navigate to ptbr page; if EN, navigate to en page
+        const infoPath = language === 'pt-br' 
+            ? `/info-ptbr/${cardType === 'series' ? 'tv' : 'movie'}/${cardId}`
+            : `/info/${cardType === 'series' ? 'tv' : 'movie'}/${cardId}`;
+        
+        navigate(infoPath);
+    };
+
+    const handleRemoveFavorite = async (cardId, cardType) => {
+        if (unfavoritingId) return; // Prevent multiple clicks
+
+        try {
+            setUnfavoritingId(cardId);
+            console.log(`❤️ Removing favorite: ID ${cardId}`);
+            
+            const response = await api.post(`/media/${cardId}/favorite`, {
+                title: 'Unknown',
+                year: null,
+                poster: null,
+                mediaType: cardType === 'series' ? 'tv' : 'movie',
+                externalId: cardId
+            });
+
+            if (response.data.success) {
+                console.log(`✅ Favorite removed successfully`);
+                // Remove from local state immediately
+                setFavorites(prev => prev.filter(fav => fav.id !== cardId));
+                // Dispatch event to update Info.js if open
+                window.dispatchEvent(new CustomEvent('favoriteAdded', { 
+                    detail: { 
+                        mediaId: cardId, 
+                        favorited: false 
+                    } 
+                }));
+            }
+        } catch (error) {
+            console.error('Error removing favorite:', error);
+        } finally {
+            setUnfavoritingId(null);
+        }
+    };
 
     return (
-        <section class="likedContent container" display="none">
+        <section class="likedContent container">
             <div class="contentHeader">
                 <h2 class="sectionTitle">Favorites</h2>
 
@@ -153,52 +264,60 @@ function ProfileFavorites() {
                         )}
                     </div>
                 </div>
-
-                {/* <div class="searchBox">
-                    <input type="text" placeholder="Search..." />
-                    <button type="submit"><FontAwesomeIcon icon={faSearch} /></button>
-                </div> */}
             </div>
 
             <div class="contentGrid">
-                {sortedCards.map((card) => (
-                    <div key={card.id} class={`contentCard ${card.type}`}>
-                        <div class="cardImage">
-                            <img src={card.poster} alt={card.title} />
-                            <div class="cardOverlay">
-                                {/* <div class="cardRating">
-                                    <FontAwesomeIcon icon={faStar} />
-                                    <span>{card.rating}</span>
-                                </div> */}
-                                <button class="likeButton liked">
-                                    <FontAwesomeIcon icon={faHeart} />
-                                </button>
-                            </div>
-                        </div>
-                        <div class="cardInfo">
-                            <h3 class="cardTitle">{card.title}</h3>
-                            <div class="cardMeta">
-                                <span class="cardYear">{card.year}</span>
-                                <span class="cardDuration">{card.duration}</span>
-                            </div>
-                            <div class="cardActions">
-                            </div>
-                        </div>
+                {loading ? (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#fff' }}>
+                        <p>Loading favorites...</p>
                     </div>
-                ))}
+                ) : sortedCards.length > 0 ? (
+                    sortedCards.map((card) => (
+                        <div 
+                            key={card.id} 
+                            class={`contentCard ${card.type}`}
+                            onClick={() => handleNavigateToInfo(card.id, card.type)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div class="cardImage">
+                                <img 
+                                    src={card.poster} 
+                                    alt={card.title}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <div class="cardOverlay">
+                                    {isOwnProfile && (
+                                        <button 
+                                            class="likeButton liked"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveFavorite(card.id, card.type);
+                                            }}
+                                            disabled={unfavoritingId === card.id}
+                                            title="Remove from favorites"
+                                        >
+                                            <FontAwesomeIcon icon={faHeart} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div class="cardInfo">
+                                <h3 class="cardTitle">{card.title}</h3>
+                                <div class="cardMeta">
+                                    <span class="cardYear">{card.year}</span>
+                                    <span class="cardDuration">{card.duration}</span>
+                                </div>
+                                <div class="cardActions">
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#fff' }}>
+                        <p>No favorites yet. Start adding movies and TV shows to your favorites!</p>
+                    </div>
+                )}
             </div>
-
-            {/* <div class="pagination">
-                <button class="paginationButton" disabled>
-                    <FontAwesomeIcon icon={faChevronLeft} />
-                </button>
-                <button class="paginationButton active">1</button>
-                <button class="paginationButton">2</button>
-                <button class="paginationButton">3</button>
-                <button class="paginationButton">
-                    <FontAwesomeIcon icon={faChevronRight} />
-                </button>
-            </div> */}
         </section>
     );
 

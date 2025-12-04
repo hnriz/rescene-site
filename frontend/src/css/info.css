@@ -284,9 +284,31 @@ body {
     color: var(--success);
 }
 
+.action-btn-info.watched.active {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.action-btn-info.watched.active:hover {
+    background: rgba(76, 175, 80, 0.3);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
 .action-btn-info.like:hover {
     border-color: var(--danger);
     color: var(--danger);
+}
+
+.action-btn-info.like.active {
+    background: rgba(255, 71, 87, 0.2);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.action-btn-info.like.active:hover {
+    background: rgba(255, 71, 87, 0.3);
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
 }
 
 .action-btn-info.add-list:hover {
@@ -1286,4 +1308,84 @@ a:focus {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 4px 20px rgba(250, 218, 94, 0.3);
+}
+
+/* ===== ESTILOS PARA MENSAGENS DE ERRO E CARREGAMENTO ===== */
+.error-message-container,
+.loading-message-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+    padding: 20px;
+}
+
+.error-message {
+    text-align: center;
+    background: var(--card-bg);
+    padding: 60px 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    max-width: 600px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.error-message h2 {
+    color: var(--danger);
+    font-size: 28px;
+    margin: 0 0 15px 0;
+}
+
+.error-message p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 30px 0;
+}
+
+.error-message .back-btn {
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+    color: var(--primary-bg);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(250, 218, 94, 0.3);
+}
+
+.error-message .back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(250, 218, 94, 0.5);
+}
+
+.loading-spinner {
+    font-size: 24px;
+    color: var(--accent-color);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
