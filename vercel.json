@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "cd frontend && npm install && DISABLE_ESLINT_PLUGIN=true npm run build",
   "builds": [
     {
       "src": "frontend/package.json",
@@ -25,6 +26,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "outputDirectory": "frontend/build"
+  }
 }
