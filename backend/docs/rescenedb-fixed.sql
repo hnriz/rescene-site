@@ -240,25 +240,7 @@ CREATE TABLE IF NOT EXISTS `favorite` (
     ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- ========================================
--- VERIFICAÇÕES E AJUSTES DE COLUNAS
--- ========================================
--- Adicionar colunas à tabela user (se não existirem)
-ALTER TABLE `user` ADD COLUMN IF NOT EXISTS `bio` VARCHAR(250) NULL;
 
--- Adicionar colunas à tabela media (se não existirem)
-ALTER TABLE `media` ADD COLUMN IF NOT EXISTS `rating` DECIMAL(3,1) NULL;
-ALTER TABLE `media` ADD COLUMN IF NOT EXISTS `overview` TEXT NULL;
-
--- Adicionar índices de performance (se não existirem)
-ALTER TABLE `media` ADD INDEX IF NOT EXISTS `idx_poster_path` (`poster_path` ASC);
-ALTER TABLE `review` ADD INDEX IF NOT EXISTS `idx_media_id` (`media_id` ASC);
-ALTER TABLE `review` ADD INDEX IF NOT EXISTS `idx_user_id` (`user_id` ASC);
-ALTER TABLE `list` ADD INDEX IF NOT EXISTS `idx_user_id` (`user_id` ASC);
-ALTER TABLE `favorite` ADD INDEX IF NOT EXISTS `idx_media_id` (`media_id` ASC);
-ALTER TABLE `favorite` ADD INDEX IF NOT EXISTS `idx_user_id` (`user_id` ASC);
-ALTER TABLE `watched` ADD INDEX IF NOT EXISTS `idx_user_id` (`user_id` ASC);
-ALTER TABLE `watched` ADD INDEX IF NOT EXISTS `idx_media_id` (`media_id` ASC);
 
 -- ========================================
 -- DADOS INICIAIS (SEED)
